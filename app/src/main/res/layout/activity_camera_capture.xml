@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent" android:layout_height="match_parent">
+
+    <SurfaceView
+        android:id="@+id/surfaceview"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent" />
+
+    <ImageView
+    android:layout_centerHorizontal="true"
+    android:layout_alignParentBottom="true"
+    android:padding="10dp"
+    android:src="@drawable/img_capture"
+    android:id="@+id/btn_capture"
+    android:layout_width="75dp"
+    android:layout_height="75dp" />
+
+    <ImageView
+        android:visibility="gone"
+        android:layout_alignParentRight="true"
+        android:layout_alignParentTop="true"
+        android:padding="10dp"
+        android:src="@drawable/img_capture_switch"
+        android:id="@+id/btn_switch"
+        android:layout_width="75dp"
+        android:layout_height="75dp" />
+
+
+</RelativeLayout>
