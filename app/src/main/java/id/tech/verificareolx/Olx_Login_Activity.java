@@ -5,6 +5,7 @@ import org.json.JSONException;
 import org.json.JSONObject;
 
 import id.tech.POJO.OlxOutlet;
+import id.tech.POJO.OlxLogin;
 import id.tech.util.Parameter_Collections;
 import id.tech.util.Public_Functions;
 import id.tech.util.RowData_JenisOutlet;
@@ -33,6 +34,7 @@ import com.google.gson.Gson;
 import java.util.ArrayList;
 import java.util.List;
 import id.tech.util.Test_RestAdapter;
+import retrofit.GsonConverterFactory;
 import retrofit.Response;
 import retrofit.Retrofit;
 //import retrofit.RetrofitError;
@@ -78,23 +80,54 @@ public class Olx_Login_Activity extends ActionBarActivity {
 			}
 		});
 
-		String url = "http://verificare-activation.com/api";
-		Retrofit retrofit = new Retrofit.Builder().baseUrl(url).build();
+		String url = "http://verificare-activation.com/api/";
+		Retrofit retrofit = new Retrofit.Builder().baseUrl(url).addConverterFactory(GsonConverterFactory.create()).build();
 		Test_RestAdapter restAdapter = retrofit.create(Test_RestAdapter.class);
 		Call<OlxOutlet> call = restAdapter.getOutlet();
 		call.enqueue(new Callback<OlxOutlet>() {
 			@Override
 			public void onResponse(Response<OlxOutlet> response, Retrofit retrofit) {
-				Toast.makeText(getApplicationContext(),
-						response.body().getData().get(0).getNamaOutlet(),Toast.LENGTH_LONG).show();
+
+				if(response.isSuccess()) {
+//					Log.e("error =", response.message().toString());
+//					Log.e("error =", response.raw().toString());
+					Log.e("data =", response.body().getData().toString());
+					Log.e("Nama outlet =", response.body().getData().get(0).getNamaOutlet().toString());
+					Toast.makeText(getApplicationContext(), retrofit.baseUrl().toString(), Toast.LENGTH_LONG).show();
+
+				}else{
+					Toast.makeText(getApplicationContext(), "Response is Faliled ", Toast.LENGTH_LONG).show();
+//					Log.e("error =", response.errorBody().string().toString());
+					Log.e("error =", String.valueOf(response.code()));
+				}
+
+
 			}
 
 			@Override
 			public void onFailure(Throwable t) {
-
+				Toast.makeText(getApplicationContext(), "OnFailure = " + t.getMessage().toString(), Toast.LENGTH_LONG).show();
 			}
 		});
 
+//		Call<OlxLogin> call_2 = restAdapter.login();
+//		call_2.enqueue(new Callback<OlxLogin>() {
+//			@Override
+//			public void onResponse(Response<OlxLogin> response, Retrofit retrofit) {
+//				if(response.isSuccess()){
+//					Log.e("raw =", response.raw().toString());
+//					Log.e("data =", response.body().getData().toString());
+//					}else{
+//					Toast.makeText(getApplicationContext(), response.code(), Toast.LENGTH_LONG).show();
+//				}
+//
+//			}
+//
+//			@Override
+//			public void onFailure(Throwable t) {
+//				Toast.makeText(getApplicationContext(), "Gagal", Toast.LENGTH_LONG).show();
+//			}
+//		});
 
 //		RestAdapter test_adapter = new RestAdapter.Builder().setEndpoint(url).build();
 //

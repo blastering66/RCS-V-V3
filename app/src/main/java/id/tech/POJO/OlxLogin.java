@@ -10,33 +10,27 @@ public class OlxLogin {
     private String message;
 //    @SerializedName("data")
     @Expose
-    private Data data;
-
+    private Data data ;
     public String getJsonCode() {
         return jsonCode;
     }
-
     public void setJsonCode(String jsonCode) {
         this.jsonCode = jsonCode;
     }
-
     public String getMessage() {
         return message;
     }
-
     public void setMessage(String message) {
         this.message = message;
     }
-
     public Data getData() {
         return data;
     }
-
     public void setData(Data data) {
         this.data = data;
     }
 
-    private class Data{
+    public class Data{
 //        @SerializedName("id_pegawai")
         @Expose
         private Integer idPegawai;
@@ -58,9 +52,6 @@ public class OlxLogin {
 //        @SerializedName("username")
         @Expose
         private String username;
-//        @SerializedName("password")
-        @Expose
-        private Object password;
 //        @SerializedName("created_date")
         @Expose
         private String createdDate;
@@ -121,13 +112,7 @@ public class OlxLogin {
             this.username = username;
         }
 
-        public Object getPassword() {
-            return password;
-        }
 
-        public void setPassword(Object password) {
-            this.password = password;
-        }
 
         public String getCreatedDate() {
             return createdDate;
