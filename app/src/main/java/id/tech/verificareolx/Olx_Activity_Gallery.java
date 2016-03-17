@@ -3,6 +3,8 @@ package id.tech.verificareolx;
 /**
  * Created by macbook on 2/29/16.
  */
+import id.tech.POJO.OlxResponseRowCount;
+import id.tech.util.Test_RestAdapter;
 import android.app.ProgressDialog;
 import android.content.Context;
 import android.content.Intent;
@@ -26,12 +28,16 @@ import android.widget.HorizontalScrollView;
 import android.widget.ImageView;
 import android.widget.Toast;
 
+import com.squareup.okhttp.MediaType;
+import com.squareup.okhttp.RequestBody;
+
 import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.io.DataOutputStream;
 import java.io.File;
 import java.io.FileInputStream;
+import java.io.IOException;
 import java.io.InputStream;
 import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
@@ -42,6 +48,10 @@ import java.util.List;
 import id.tech.util.Parameter_Collections;
 import id.tech.util.Public_Functions;
 import id.tech.util.RowDataGallery;
+import retrofit.Call;
+import retrofit.GsonConverterFactory;
+import retrofit.Response;
+import retrofit.Retrofit;
 
 public class Olx_Activity_Gallery extends AppCompatActivity {
     Button btn;
@@ -53,6 +63,10 @@ public class Olx_Activity_Gallery extends AppCompatActivity {
     SharedPreferences spf;
     private String id_pegawai;
     List<RowDataGallery> data_selected;
+
+    String url_file00, url_file01, url_file02, url_file03, url_file04, url_file05, url_file06;
+    File sourceFile00,sourceFile01, sourceFile02, sourceFile03,sourceFile04, sourceFile05, sourceFile06;
+    RequestBody body00,body01,body02,body03,body04,body05, body06;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -126,22 +140,7 @@ public class Olx_Activity_Gallery extends AppCompatActivity {
 
             case R.id.action_upload_photo:
 
-                if (Public_Functions.isNetworkAvailable(getApplicationContext())) {
-//				boolean b = true;
-//				if (b) {
-                    if(data_selected != null){
-                        new Async_SubmitGallery().execute();
-                    }else{
-                        Toast.makeText(getApplicationContext(),
-                                "Harap Input Foto terlebih dahulu",
-                                Toast.LENGTH_LONG).show();
-                    }
-
-                }else {
-                    Toast.makeText(getApplicationContext(),
-                            "No Internet Connection, Cek Your Network",
-                            Toast.LENGTH_LONG).show();
-                }
+                new AsyncTask_SubmitGallery().execute();
                 break;
 
             default:
@@ -159,53 +158,122 @@ public class Olx_Activity_Gallery extends AppCompatActivity {
         overridePendingTransition(android.R.anim.fade_in, R.anim.slide_out_right);
     }
 
-    private class Async_SubmitGallery extends AsyncTask<Void, Void, String> {
-        ProgressDialog pdialog;
-        String respondMessage;
-        JSONObject jsonResult;
+    private class AsyncTask_SubmitGallery extends AsyncTask<Void,Void,Void>{
         Olx_DialogFragmentProgress dialogProgress;
-        String cDesc ;
-        int serverRespondCode = 0;
-
-        String url_file00, url_file01, url_file02, url_file03, url_file04, url_file05, url_file06;
-        File sourceFile00,sourceFile01, sourceFile02, sourceFile03,sourceFile04, sourceFile05, sourceFile06;
-        FileInputStream fileInputStream00,fileInputStream01, fileInputStream02, fileInputStream03
-                ,fileInputStream04, fileInputStream05, fileInputStream06;
-        private String row_count;
+        String cKet, cRowCount, cMessage;
 
         @Override
         protected void onPreExecute() {
-            // TODO Auto-generated method stub
             super.onPreExecute();
+
             dialogProgress = new Olx_DialogFragmentProgress();
             dialogProgress.show(getSupportFragmentManager(), "");
-
-            cDesc = ed_ket.getText().toString();
+            cKet = ed_ket.getText().toString();
         }
 
         @Override
-        protected String doInBackground(Void... params) {
-            // TODO Auto-generated method stub
-            return uploadDataForm();
-        }
+        protected Void doInBackground(Void... params) {
+            if (Public_Functions.isNetworkAvailable(getApplicationContext())) {
+//				boolean b = true;
+//				if (b) {
+                if(data_selected != null){
+//                        new Async_SubmitGallery().execute();
 
-        @Override
-        protected void onPostExecute(String result) {
-            // TODO Auto-generated method stub
-            super.onPostExecute(result);
 
-            JSONObject jObj = jsonResult;
-            try{
-                row_count = jObj.getString(Parameter_Collections.TAG_ROWCOUNT);
+                    for(int i=0; i < data_selected.size(); i++){
+                        if(i == 0){
+                            url_file00 = data_selected.get(i).path;
+                        }else if(i == 1){
+                            url_file01 = data_selected.get(i).path;
+                        }else if(i == 2){
+                            url_file02 = data_selected.get(i).path;
+                        }else if(i == 3){
+                            url_file03 = data_selected.get(i).path;
+                        }else if(i == 4){
+                            url_file04 = data_selected.get(i).path;
+                        }else if(i == 5){
+                            url_file05 = data_selected.get(i).path;
+                        }else if(i == 6){
+                            url_file06 = data_selected.get(i).path;
+                        }
+                    }
 
-            }catch(JSONException e){
-                row_count = "0";
+                    if(url_file00 != null){
+                        sourceFile00 = new File(url_file00);
+                        body00 = RequestBody.create(MediaType.parse("image/*"), sourceFile00);
+                    }
+                    if(url_file01 != null){
+                        sourceFile01 = new File(url_file01);
+                        body01 = RequestBody.create(MediaType.parse("image/*"), sourceFile01);
+                    }
+                    if(url_file02 != null){
+                        sourceFile02 = new File(url_file02);
+                        body02 = RequestBody.create(MediaType.parse("image/*"), sourceFile02);
+                    }if(url_file03 != null){
+                        sourceFile03 = new File(url_file03);
+                        body03 = RequestBody.create(MediaType.parse("image/*"), sourceFile03);
+                    }if(url_file04 != null){
+                        sourceFile04 = new File(url_file04);
+                        body04 = RequestBody.create(MediaType.parse("image/*"), sourceFile04 );
+                    }
+                    if(url_file05 != null){
+                        sourceFile05 = new File(url_file05);
+                        body05 = RequestBody.create(MediaType.parse("image/*"), sourceFile05 );
+                    }if(url_file06 != null){
+                        sourceFile06 = new File(url_file06);
+                        body06 = RequestBody.create(MediaType.parse("image/*"), sourceFile06 );
+                    }
+
+                    RequestBody cKind = RequestBody.create(MediaType.parse("text/plain"), "activities_photo");
+                    RequestBody cId_pegawai = RequestBody.create(MediaType.parse("text/plain"), id_pegawai);
+                    RequestBody cDesc  = RequestBody.create(MediaType.parse("text/plain"), cKet);
+
+                    Retrofit retrofit = new Retrofit.Builder().baseUrl(Parameter_Collections.URL_ENDPOINT)
+                            .addConverterFactory(GsonConverterFactory.create()).build();
+                    Test_RestAdapter restAdapter = retrofit.create(Test_RestAdapter.class);
+
+                    Call<OlxResponseRowCount> call = restAdapter.uploadGallery(cKind, cId_pegawai
+                            , cDesc, body00, body01, body02, body03, body04, body05, body06);
+
+                    try{
+                        Response<OlxResponseRowCount> response = call.execute();
+                        if(response.isSuccess()){
+                            Integer rowCount = response.body().getRowCount();
+                            cRowCount = String.valueOf(rowCount);
+                            Log.e("Row Count = " , String.valueOf(rowCount));
+                        }else{
+//                            Toast.makeText(getApplicationContext(),"Upload Gagal, message = " + response.errorBody().toString(),
+//                                    Toast.LENGTH_LONG).show();
+                            cRowCount = "0";
+                            cMessage = "Upload Gagal, message = " + response.errorBody().toString();
+                        }
+                    }catch (IOException e){
+                        cRowCount = "0";
+                        cMessage = "IOException Occured";
+                    }
+
+                }else{
+                    Toast.makeText(getApplicationContext(),
+                            "Harap Input Foto terlebih dahulu",
+                            Toast.LENGTH_LONG).show();
+                }
+
+            }else {
+                Toast.makeText(getApplicationContext(),
+                        "No Internet Connection, Cek Your Network",
+                        Toast.LENGTH_LONG).show();
+                cRowCount = "0";
+                cMessage = "No Internet Connection, Cek Your Network";
 
             }
+            return null;
+        }
 
-            if(row_count.equals("1")){
-                dialogProgress.dismiss();
-
+        @Override
+        protected void onPostExecute(Void aVoid) {
+            super.onPostExecute(aVoid);
+            dialogProgress.dismiss();
+            if(cRowCount.equals("1")){
                 spf.edit().putBoolean(Parameter_Collections.SH_OUTLET_VISITED, true).commit();
 
                 Olx_DialogLocationConfirmation dialog = new Olx_DialogLocationConfirmation();
@@ -214,359 +282,22 @@ public class Olx_Activity_Gallery extends AppCompatActivity {
                 dialog.setFrom(9);
                 dialog.setCancelable(false);
                 dialog.show(getSupportFragmentManager(), "");
-//				Toast.makeText(getApplicationContext(), "Update Branding Success", Toast.LENGTH_LONG).show();
-//				finish();
             }else{
                 dialogProgress.dismiss();
 
                 Olx_DialogLocationConfirmation dialog = new Olx_DialogLocationConfirmation();
                 dialog.setContext(getApplicationContext());
-                dialog.setText(result);
+                dialog.setText(cMessage);
                 dialog.setFrom(9);
                 dialog.setCancelable(false);
                 dialog.show(getSupportFragmentManager(), "");
 //				Toast.makeText(getApplicationContext(), result, Toast.LENGTH_LONG).show();
 //				finish();
             }
-
-
-        }
-
-        private String uploadDataForm(){
-            HttpURLConnection conn = null;
-            DataOutputStream dos = null;
-            String lineEnd = "\r\n";
-            String twoHyphens = "--";
-            String boundary = "*****";
-            int bytesRead, bytesAvailable, bufferSize;
-            byte[] buffer;
-            int maxBufferSize = 1 * 1024 * 1024;
-
-            for(int i=0; i < data_selected.size(); i++){
-                if(i == 0){
-                    url_file00 = data_selected.get(i).path;
-                }else if(i == 1){
-                    url_file01 = data_selected.get(i).path;
-                }else if(i == 2){
-                    url_file02 = data_selected.get(i).path;
-                }else if(i == 3){
-                    url_file03 = data_selected.get(i).path;
-                }else if(i == 4){
-                    url_file04 = data_selected.get(i).path;
-                }else if(i == 5){
-                    url_file05 = data_selected.get(i).path;
-                }else if(i == 6){
-                    url_file06 = data_selected.get(i).path;
-                }
-            }
-
-           if(url_file00 != null){
-                sourceFile00 = new File(url_file00);
-            }
-            if(url_file01 != null){
-                sourceFile01 = new File(url_file01);
-            }
-            if(url_file02 != null){
-                sourceFile02 = new File(url_file02);
-            }if(url_file03 != null){
-                sourceFile03 = new File(url_file03);
-            }if(url_file04 != null){
-                sourceFile04 = new File(url_file04);
-            }
-            if(url_file05 != null){
-                sourceFile05 = new File(url_file05);
-            }if(url_file06 != null){
-                sourceFile06 = new File(url_file06);
-            }
-
-            try {
-                URL url = new URL(Parameter_Collections.URL_INSERT);
-
-                conn = (HttpURLConnection) url.openConnection();
-                conn.setDoInput(true);
-                conn.setDoOutput(true);
-                conn.setUseCaches(false);
-                conn.setRequestMethod("POST");
-
-                conn.setRequestProperty("ENCTYPE", "multipart/form-data");
-                conn.setRequestProperty("Content-Type",
-                        "multipart/form-data;boundary=" + boundary);
-                if(url_file00 != null){
-                    conn.setRequestProperty("img0", url_file00);
-                }
-                if(url_file02 != null){
-                    conn.setRequestProperty("img1", url_file01);
-                }
-                if(url_file02 != null){
-                    conn.setRequestProperty("img2", url_file02);
-                }
-                if(url_file03 != null){
-                    conn.setRequestProperty("img3", url_file03);
-                }
-                if(url_file04 != null){
-                    conn.setRequestProperty("img4", url_file04);
-                }
-                if(url_file05 != null){
-                    conn.setRequestProperty("img5", url_file05);
-                }
-                if(url_file06 != null){
-                    conn.setRequestProperty("img6", url_file06);
-                }
-
-                dos = new DataOutputStream(conn.getOutputStream());
-
-                if(url_file00 != null){
-                    fileInputStream00 = new FileInputStream(
-                            sourceFile00);
-                    //img 00
-                    dos.writeBytes(twoHyphens + boundary + lineEnd);
-                    dos.writeBytes("Content-Disposition: form-data; name=\"img0\";filename=\""
-                            + url_file00 + "\"" + lineEnd);
-                    dos.writeBytes(lineEnd);
-
-                    bytesAvailable = fileInputStream00.available();
-
-                    bufferSize = Math.min(bytesAvailable, maxBufferSize);
-                    buffer = new byte[bufferSize];
-
-                    bytesRead = fileInputStream00.read(buffer, 0, bufferSize);
-                    while (bytesRead > 0) {
-                        dos.write(buffer, 0, bufferSize);
-                        bytesAvailable = fileInputStream00.available();
-                        bufferSize = Math.min(bytesAvailable, maxBufferSize);
-                        bytesRead = fileInputStream00.read(buffer, 0, bufferSize);
-                    }
-
-                    dos.writeBytes(lineEnd);
-                    dos.writeBytes(twoHyphens + boundary + twoHyphens + lineEnd);
-
-                }if(url_file01 != null){
-                    fileInputStream01 = new FileInputStream(
-                            sourceFile01);
-                    //img 01
-                    dos.writeBytes(twoHyphens + boundary + lineEnd);
-                    dos.writeBytes("Content-Disposition: form-data; name=\"img1\";filename=\""
-                            + url_file01 + "\"" + lineEnd);
-                    dos.writeBytes(lineEnd);
-
-                    bytesAvailable = fileInputStream01.available();
-
-                    bufferSize = Math.min(bytesAvailable, maxBufferSize);
-                    buffer = new byte[bufferSize];
-
-                    bytesRead = fileInputStream01.read(buffer, 0, bufferSize);
-                    while (bytesRead > 0) {
-                        dos.write(buffer, 0, bufferSize);
-                        bytesAvailable = fileInputStream01.available();
-                        bufferSize = Math.min(bytesAvailable, maxBufferSize);
-                        bytesRead = fileInputStream01.read(buffer, 0, bufferSize);
-                    }
-
-                    dos.writeBytes(lineEnd);
-                    dos.writeBytes(twoHyphens + boundary + twoHyphens + lineEnd);
-
-                }if(url_file02 != null){
-                    fileInputStream02 = new FileInputStream(
-                            sourceFile02);
-                    //img 02
-                    dos.writeBytes(twoHyphens + boundary + lineEnd);
-                    dos.writeBytes("Content-Disposition: form-data; name=\"img2\";filename=\""
-                            + url_file02 + "\"" + lineEnd);
-                    dos.writeBytes(lineEnd);
-
-                    bytesAvailable = fileInputStream02.available();
-
-                    bufferSize = Math.min(bytesAvailable, maxBufferSize);
-                    buffer = new byte[bufferSize];
-
-                    bytesRead = fileInputStream02.read(buffer, 0, bufferSize);
-                    while (bytesRead > 0) {
-                        dos.write(buffer, 0, bufferSize);
-                        bytesAvailable = fileInputStream02.available();
-                        bufferSize = Math.min(bytesAvailable, maxBufferSize);
-                        bytesRead = fileInputStream02.read(buffer, 0, bufferSize);
-                    }
-
-                    dos.writeBytes(lineEnd);
-                    dos.writeBytes(twoHyphens + boundary + twoHyphens + lineEnd);
-                }if(url_file03 != null){
-                    fileInputStream03 = new FileInputStream(
-                            sourceFile03);
-                    //img 03
-                    dos.writeBytes(twoHyphens + boundary + lineEnd);
-                    dos.writeBytes("Content-Disposition: form-data; name=\"img3\";filename=\""
-                            + url_file03 + "\"" + lineEnd);
-                    dos.writeBytes(lineEnd);
-
-                    bytesAvailable = fileInputStream03.available();
-
-                    bufferSize = Math.min(bytesAvailable, maxBufferSize);
-                    buffer = new byte[bufferSize];
-
-                    bytesRead = fileInputStream03.read(buffer, 0, bufferSize);
-                    while (bytesRead > 0) {
-                        dos.write(buffer, 0, bufferSize);
-                        bytesAvailable = fileInputStream03.available();
-                        bufferSize = Math.min(bytesAvailable, maxBufferSize);
-                        bytesRead = fileInputStream03.read(buffer, 0, bufferSize);
-                    }
-
-                    dos.writeBytes(lineEnd);
-                    dos.writeBytes(twoHyphens + boundary + twoHyphens + lineEnd);
-
-                }if(url_file04 != null){
-                    fileInputStream04 = new FileInputStream(
-                            sourceFile04);
-                    //img 01
-                    dos.writeBytes(twoHyphens + boundary + lineEnd);
-                    dos.writeBytes("Content-Disposition: form-data; name=\"img4\";filename=\""
-                            + url_file04 + "\"" + lineEnd);
-                    dos.writeBytes(lineEnd);
-
-                    bytesAvailable = fileInputStream04.available();
-
-                    bufferSize = Math.min(bytesAvailable, maxBufferSize);
-                    buffer = new byte[bufferSize];
-
-                    bytesRead = fileInputStream04.read(buffer, 0, bufferSize);
-                    while (bytesRead > 0) {
-                        dos.write(buffer, 0, bufferSize);
-                        bytesAvailable = fileInputStream04.available();
-                        bufferSize = Math.min(bytesAvailable, maxBufferSize);
-                        bytesRead = fileInputStream04.read(buffer, 0, bufferSize);
-                    }
-
-                    dos.writeBytes(lineEnd);
-                    dos.writeBytes(twoHyphens + boundary + twoHyphens + lineEnd);
-
-                }if(sourceFile05 != null){
-                    fileInputStream05 = new FileInputStream(
-                            sourceFile05);
-                    //img 02
-                    dos.writeBytes(twoHyphens + boundary + lineEnd);
-                    dos.writeBytes("Content-Disposition: form-data; name=\"img5\";filename=\""
-                            + url_file05 + "\"" + lineEnd);
-                    dos.writeBytes(lineEnd);
-
-                    bytesAvailable = fileInputStream05.available();
-
-                    bufferSize = Math.min(bytesAvailable, maxBufferSize);
-                    buffer = new byte[bufferSize];
-
-                    bytesRead = fileInputStream05.read(buffer, 0, bufferSize);
-                    while (bytesRead > 0) {
-                        dos.write(buffer, 0, bufferSize);
-                        bytesAvailable = fileInputStream05.available();
-                        bufferSize = Math.min(bytesAvailable, maxBufferSize);
-                        bytesRead = fileInputStream05.read(buffer, 0, bufferSize);
-                    }
-
-                    dos.writeBytes(lineEnd);
-                    dos.writeBytes(twoHyphens + boundary + twoHyphens + lineEnd);
-                }if(url_file06 != null){
-                    fileInputStream06 = new FileInputStream(
-                            sourceFile06);
-                    //img 03
-                    dos.writeBytes(twoHyphens + boundary + lineEnd);
-                    dos.writeBytes("Content-Disposition: form-data; name=\"img6\";filename=\""
-                            + url_file06 + "\"" + lineEnd);
-                    dos.writeBytes(lineEnd);
-
-                    bytesAvailable = fileInputStream06.available();
-
-                    bufferSize = Math.min(bytesAvailable, maxBufferSize);
-                    buffer = new byte[bufferSize];
-
-                    bytesRead = fileInputStream06.read(buffer, 0, bufferSize);
-                    while (bytesRead > 0) {
-                        dos.write(buffer, 0, bufferSize);
-                        bytesAvailable = fileInputStream06.available();
-                        bufferSize = Math.min(bytesAvailable, maxBufferSize);
-                        bytesRead = fileInputStream06.read(buffer, 0, bufferSize);
-                    }
-
-                    dos.writeBytes(lineEnd);
-                    dos.writeBytes(twoHyphens + boundary + twoHyphens + lineEnd);
-
-                }
-
-
-
-                // param kind
-                dos.writeBytes(twoHyphens + boundary + lineEnd);
-                dos.writeBytes("Content-Disposition: form-data; name=\""
-                        + Parameter_Collections.KIND + "\"" + lineEnd);
-                dos.writeBytes(lineEnd);
-                dos.writeBytes(Parameter_Collections.KIND_ACTIVITY_PHOTO+ lineEnd);
-
-                // param id pegawai
-                dos.writeBytes(twoHyphens + boundary + lineEnd);
-                dos.writeBytes("Content-Disposition: form-data; name=\""
-                        + Parameter_Collections.TAG_ID_PEGAWAI + "\"" + lineEnd);
-                dos.writeBytes(lineEnd);
-                dos.writeBytes(id_pegawai + lineEnd);
-
-                // param desc program
-                dos.writeBytes(twoHyphens + boundary + lineEnd);
-                dos.writeBytes("Content-Disposition: form-data; name=\""
-                        + Parameter_Collections.TAG_DESC_GALLERY + "\"" + lineEnd);
-                dos.writeBytes(lineEnd);
-                dos.writeBytes(cDesc + lineEnd);
-                dos.writeBytes(twoHyphens + boundary + twoHyphens + lineEnd);
-
-
-                serverRespondCode = conn.getResponseCode();
-                respondMessage = conn.getResponseMessage();
-
-                if (serverRespondCode == 200) {
-                    Log.e("CODE ", "Success Upload");
-                } else {
-                    Log.e("CODE ", "Success failed");
-                }
-
-
-                if(url_file00 != null){
-                    fileInputStream00.close();
-                }if(url_file01 != null){
-                    fileInputStream01.close();
-                }if(url_file02 != null){
-                    fileInputStream02.close();
-                }if(url_file03 != null){
-                    fileInputStream03.close();
-                }if(url_file04 != null){
-                    fileInputStream04.close();
-                }if(url_file05 != null){
-                    fileInputStream05.close();
-                }if(url_file06 != null){
-                    fileInputStream06.close();
-                }
-
-
-                dos.flush();
-
-                InputStream is = conn.getInputStream();
-                int ch;
-
-                StringBuffer buff = new StringBuffer();
-                while ((ch = is.read()) != -1) {
-                    buff.append((char) ch);
-                }
-                Log.e("publish gallery", buff.toString());
-
-                jsonResult = new JSONObject(buff.toString());
-                dos.close();
-
-            }catch (MalformedURLException ex) {
-                ex.printStackTrace();
-            } catch (Exception e) {
-                e.printStackTrace();
-            }
-            return respondMessage;
         }
     }
 
-
-    @Override
+   @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
         // TODO Auto-generated method stub
         if (resultCode == RESULT_OK) {
@@ -576,7 +307,11 @@ public class Olx_Activity_Gallery extends AppCompatActivity {
                 data_selected = Parameter_Collections.data_selected;
 
                 for(int i=0; i< data_selected.size(); i++){
-                    Bitmap b = BitmapFactory.decodeFile(data_selected.get(i).path);
+                    Bitmap b = Bitmap.createScaledBitmap(BitmapFactory.decodeFile(data_selected.get(i).path),
+                            100,150,true
+                            );
+
+
                     if (i == 0) {
                         horizontalScroll.setVisibility(View.VISIBLE);
                         imgview_00.setVisibility(View.VISIBLE);

@@ -4,7 +4,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class Parameter_Collections {
-
+	public static String URL_ENDPOINT = "http://verificare-activation.com/api/";
 	public static List<RowDataGallery> data_selected;
 
 	public static String FROM_SURAT = "from_surat";
@@ -105,6 +105,7 @@ public class Parameter_Collections {
 	public static String KIND_STOCK_STORE = "stock_store";
 	public static String KIND_ABSEN = "absensi";
 	public static String KIND_OUTLET = "outlet";
+	public static String KIND_OUTLET_POST = "outlet_POST";
 
 	public static String KIND_ISTIRAHAT = "absensi_istirahat";
 	public static String TIPE_ISTIRAHAT_OUT = "1";

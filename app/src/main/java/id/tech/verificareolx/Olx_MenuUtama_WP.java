@@ -1,5 +1,7 @@
 package id.tech.verificareolx;
 
+import id.tech.POJO.OlxProfile;
+import id.tech.util.Test_RestAdapter;
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -7,6 +9,11 @@ import org.json.JSONObject;
 import id.tech.util.Olx_RecyclerAdapter_Slider_Empty;
 import id.tech.util.Parameter_Collections;
 import id.tech.util.RecyclerAdapter_Slider;
+import retrofit.Call;
+import retrofit.Callback;
+import retrofit.GsonConverterFactory;
+import retrofit.Response;
+import retrofit.Retrofit;
 
 import android.app.Activity;
 import android.content.Context;
@@ -102,6 +109,7 @@ public class Olx_MenuUtama_WP extends ActionBarActivity {
 
 	private class AsyncTask_LoadProfile_Target extends AsyncTask<Void,Void,Void>{
 		String result, cCode, cNama_Pegawai, cUrl_ImgProfilePic, cTotalVisited, cTotalVisited_All;
+		Call<OlxProfile> call_profile;
 
 		@Override
 		protected void onPreExecute() {
@@ -111,61 +119,11 @@ public class Olx_MenuUtama_WP extends ActionBarActivity {
 
 		@Override
 		protected Void doInBackground(Void... params) {
+			Retrofit retrofit = new Retrofit.Builder().baseUrl(Parameter_Collections.URL_ENDPOINT).
+					addConverterFactory(GsonConverterFactory.create()).build();
+			Test_RestAdapter adapterRetrofit = retrofit.create(Test_RestAdapter.class);
+			call_profile = adapterRetrofit.getProfile(id_pegawai);
 
-//			Olx_ServiceHandlerJSON sh = new Olx_ServiceHandlerJSON();
-//			JSONObject jObj = sh.json_get_pic_profile_target(id_pegawai);
-			JSONObject jObj = null;
-
-			try{
-				cCode = jObj.getString(Parameter_Collections.TAG_JSON_CODE);
-
-				if (cCode.equals("1")) {
-					JSONObject jObj_Data = jObj
-							.getJSONObject(Parameter_Collections.TAG_DATA);
-					cNama_Pegawai = jObj_Data
-							.getString(Parameter_Collections.TAG_NAMA_PEGAWAI);
-					String img_no_data = jObj_Data.getString(Parameter_Collections.TAG_ARRAY_IMAGES);
-
-					if(img_no_data.equals("no data")){
-						cUrl_ImgProfilePic = "";
-
-					}else{
-						JSONArray jArray_Data = jObj_Data
-								.getJSONArray(Parameter_Collections.TAG_ARRAY_IMAGES);
-						for (int i = 0; i < jArray_Data.length(); i++) {
-							JSONObject c = jArray_Data.getJSONObject(i);
-
-							cUrl_ImgProfilePic = Parameter_Collections.URL_GAMBAR_THUMB
-									+ c.getString(Parameter_Collections.TAG_NAMA_IMAGE);
-						}
-					}
-					String total_visited = jObj_Data.getString(Parameter_Collections.TAG_TOTAL_VISIT_TOKO);
-					String total_visited_daily = jObj_Data.getString(Parameter_Collections.TAG_TOTAL_VISIT_DAILY);
-					String jumlah_target = jObj_Data.getString(Parameter_Collections.TAG_TARGET);
-					String jumlah_target_daily = jObj_Data.getString(Parameter_Collections.TAG_TARGET_DAILY);
-
-					Log.e("Total Daily = ", total_visited_daily + " / " +jumlah_target_daily);
-					Log.e("Total Target = ", total_visited + " / " +jumlah_target);
-
-					cTotalVisited = total_visited_daily + " / " +jumlah_target_daily;
-					cTotalVisited_All = total_visited + " / " +jumlah_target;
-
-					adapter_slider = new RecyclerAdapter_Slider(cNama_Pegawai, cUrl_ImgProfilePic, getApplicationContext(),
-							activity, getSupportFragmentManager(),cTotalVisited, cTotalVisited_All,sp);
-
-				}else{
-					cCode = "0";
-				}
-			}catch (JSONException e){
-				cCode = "0";
-
-			}catch (Exception e){
-				cCode = "0";
-			}
-
-			if(jObj == null){
-				cCode = "0";
-			}
 
 			return null;
 		}
@@ -174,17 +132,56 @@ public class Olx_MenuUtama_WP extends ActionBarActivity {
 		protected void onPostExecute(Void aVoid) {
 			super.onPostExecute(aVoid);
 
-			if(cCode.equals("1")) {
-				rv_slider.setAdapter(adapter_slider);
-			}else if (cCode.equals("0")) {
-				Toast.makeText(getApplicationContext(), "Terjadi kesalahan, Silahkan Coba lagi", Toast.LENGTH_LONG).show();
+			call_profile.enqueue(new Callback<OlxProfile>() {
+				@Override
+				public void onResponse(Response<OlxProfile> response, Retrofit retrofit) {
+
+					if(response.isSuccess()){
+						String cCode = response.body().getJsonCode().toString();
+						if(cCode.equals("1")) {
+							String cNama_Pegawai = response.body().getData().getNamaPegawai();
+							String cUrl_ImgProfilePic = "";
+							String total_visited = response.body().getData().getTotalVisit();
+							String total_visited_daily = response.body().getData().getTotalVisitDaily();
+							String jumlah_target = response.body().getData().getJumlahTarget();
+							String jumlah_target_daily = response.body().getData().getTargetPerhari();
+							cTotalVisited = total_visited_daily + " / " +jumlah_target_daily;
+							cTotalVisited_All = total_visited + " / " +jumlah_target;
+
+							adapter_slider = new RecyclerAdapter_Slider(cNama_Pegawai, cUrl_ImgProfilePic, getApplicationContext(),
+									activity, getSupportFragmentManager(),cTotalVisited, cTotalVisited_All,sp);
+
+							rv_slider.setAdapter(adapter_slider);
+
+						}else if (cCode.equals("0")) {
+							adapter_slider = new Olx_RecyclerAdapter_Slider_Empty();
+							rv_slider.setAdapter(adapter_slider);
 
 
-			} else {
-				Toast.makeText(getApplicationContext(), "Hubungi Admin untuk isi Target", Toast.LENGTH_LONG).show();
-				finish();
+						} else {
+							Toast.makeText(getApplicationContext(), "Hubungi Admin untuk isi Target", Toast.LENGTH_LONG).show();
+							finish();
 
-			}
+						}
+
+						rv_slider.setAdapter(adapter_slider);
+					}else{
+						adapter_slider = new Olx_RecyclerAdapter_Slider_Empty();
+						rv_slider.setAdapter(adapter_slider);
+						Toast.makeText(getApplicationContext(), response.errorBody() +", Silahkan Coba lagi", Toast.LENGTH_LONG).show();
+					}
+
+				}
+
+				@Override
+				public void onFailure(Throwable t) {
+					adapter_slider = new Olx_RecyclerAdapter_Slider_Empty();
+					rv_slider.setAdapter(adapter_slider);
+					Toast.makeText(getApplicationContext(), "Gagal koneksi ke Server", Toast.LENGTH_LONG).show();
+				}
+			});
+
+
 		}
 	}
 	

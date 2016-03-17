@@ -1,5 +1,6 @@
 package id.tech.verificareolx;
-
+import id.tech.util.Test_RestAdapter;
+import id.tech.POJO.OlxResponseRowCount;
 import android.app.ProgressDialog;
 import android.content.Context;
 import android.content.Intent;
@@ -30,6 +31,7 @@ import org.json.JSONObject;
 import java.io.DataOutputStream;
 import java.io.File;
 import java.io.FileInputStream;
+import java.io.IOException;
 import java.io.InputStream;
 import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
@@ -38,6 +40,10 @@ import java.net.URL;
 import id.tech.util.GPSTracker;
 import id.tech.util.Parameter_Collections;
 import id.tech.util.Public_Functions;
+import retrofit.Call;
+import retrofit.GsonConverterFactory;
+import retrofit.Response;
+import retrofit.Retrofit;
 
 public class Olx_UpdateBranding_Activity extends ActionBarActivity{
 	public static  String empty_json_prefix = "{json_code: \"0\",error_message: \"";
@@ -65,6 +71,7 @@ public class Olx_UpdateBranding_Activity extends ActionBarActivity{
 		nama_outlet = spf.getString(Parameter_Collections.SH_NAMA_OUTLET, "");
 		kode_outlet = spf.getString(Parameter_Collections.SH_KODE_OUTLET, "");
 		id_pegawai = spf.getString(Parameter_Collections.SH_ID_PEGAWAI, "");
+
 
 
 		getAllView();
@@ -199,22 +206,42 @@ public class Olx_UpdateBranding_Activity extends ActionBarActivity{
 		@Override
 		protected String doInBackground(Void... params) {
 			// TODO Auto-generated method stub
-			return uploadDataForm();
+			Retrofit retrofit = new Retrofit.Builder().baseUrl(Parameter_Collections.URL_ENDPOINT)
+					.addConverterFactory(GsonConverterFactory.create()).build();
+
+			Test_RestAdapter restAdapter = retrofit.create(Test_RestAdapter.class);
+			Call<OlxResponseRowCount> call = restAdapter.visit(Parameter_Collections.KIND_VISIT, "true",
+					kode_outlet, id_pegawai, cUsername, cEmail, cPhone, cNominal, cDesc,
+					spf.getString(Parameter_Collections.TAG_LATITUDE_NOW, ""),
+					spf.getString(Parameter_Collections.TAG_LONGITUDE_NOW, ""));
+
+			try{
+				Response<OlxResponseRowCount> response = call.execute();
+				if(response.isSuccess()){
+					return row_count = response.body().getRowCount().toString();
+
+				}else{
+					//gagal
+					return row_count ="0";
+				}
+			}catch (IOException e){
+				return row_count ="0";
+			}
+
+
+//			return uploadDataForm();
 		}
 		
 		@Override
 		protected void onPostExecute(String result) {
 			// TODO Auto-generated method stub
 			super.onPostExecute(result);
-			
-			JSONObject jObj = jsonResult;
-			try{				
-				row_count = jObj.getString(Parameter_Collections.TAG_ROWCOUNT);
-				
-			}catch(JSONException e){
-				row_count = "0";
-				
-			}
+//			JSONObject jObj = jsonResult;
+//			try{
+//				row_count = jObj.getString(Parameter_Collections.TAG_ROWCOUNT);
+//			}catch(JSONException e){
+//				row_count = "0";
+//			}
 			
 			if(row_count.equals("1")){
 				dialogProgress.dismiss();

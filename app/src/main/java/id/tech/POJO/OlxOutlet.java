@@ -11,10 +11,13 @@ import com.google.gson.annotations.SerializedName;
  * Created by RebelCreative-A1 on 14/03/2016.
  */
 public class OlxOutlet {
+    @SerializedName("json_code")
     @Expose
     private String jsonCode;
+    @SerializedName("total_data")
     @Expose
     private Integer totalData;
+    @SerializedName("data")
     @Expose
     private List<Datum> data = new ArrayList<Datum>();
     public String getJsonCode() {
@@ -37,32 +40,46 @@ public class OlxOutlet {
     }
 
     public class Datum {
+            @SerializedName("id_outlet")
             @Expose
             private String idOutlet;
+        @SerializedName("nama_outlet")
             @Expose
             private String namaOutlet;
+        @SerializedName("kode_outlet")
             @Expose
             private String kodeOutlet;
+        @SerializedName("alamat_outlet")
             @Expose
             private String alamatOutlet;
+        @SerializedName("telepon_outlet")
             @Expose
             private String teleponOutlet;
+        @SerializedName("email_outlet")
             @Expose
             private String emailOutlet;
+        @SerializedName("id_jenis_outlet")
             @Expose
             private String idJenisOutlet;
+        @SerializedName("region_outlet")
             @Expose
             private String regionOutlet;
+        @SerializedName("latitude_outlet")
             @Expose
             private String latitudeOutlet;
+        @SerializedName("longitude_outlet")
             @Expose
             private String longitudeOutlet;
+        @SerializedName("created_date")
             @Expose
             private String createdDate;
+        @SerializedName("nama_jenis_outlet")
             @Expose
             private String namaJenisOutlet;
+        @SerializedName("description_jenis_outlet")
             @Expose
             private String descriptionJenisOutlet;
+
         public String getIdOutlet() {
             return idOutlet;
         }

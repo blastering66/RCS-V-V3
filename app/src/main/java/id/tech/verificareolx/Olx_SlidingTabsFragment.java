@@ -1,5 +1,10 @@
 package id.tech.verificareolx;
 
+import id.tech.POJO.OlxHistoryVisit;
+import id.tech.POJO.OlxHistoryNotif;
+import id.tech.util.Test_RestAdapter;
+
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -11,6 +16,12 @@ import id.tech.util.RowData_History;
 import id.tech.util.Parameter_Collections;
 import id.tech.util.RowData_Notif;
 import common.view.SlidingTabLayout;
+import retrofit.Call;
+import retrofit.Callback;
+import retrofit.GsonConverterFactory;
+import retrofit.Response;
+import retrofit.Retrofit;
+
 import android.content.Context;
 import android.content.SharedPreferences;
 import android.os.AsyncTask;
@@ -23,205 +34,333 @@ import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.Toast;
 
 public class Olx_SlidingTabsFragment extends Fragment {
-//	static ArrayList<RowData_History_Absensi> data_Absensi;
-	static ArrayList<RowData_History> data_Branding;
-//	static ArrayList<RowData_History_Issue> data_Issue;
-	static ArrayList<RowData_Notif> data_Notif;
-//	Olx_ServiceHandlerJSON sh;
-	SharedPreferences spf;
-	String id_pegawai;
+    //	static ArrayList<RowData_History_Absensi> data_Absensi;
+    static ArrayList<RowData_History> data_Branding;
+    //	static ArrayList<RowData_History_Issue> data_Issue;
+    static ArrayList<RowData_Notif> data_Notif;
+    //	Olx_ServiceHandlerJSON sh;
+    SharedPreferences spf;
+    String id_pegawai;
 
-	private SlidingTabLayout mSlidingTableLayout;
-	private ViewPager mViewPager;
-	private List<SamplePagerItem> mTabs = new ArrayList<SamplePagerItem>();
+    private SlidingTabLayout mSlidingTableLayout;
+    private ViewPager mViewPager;
+    private List<SamplePagerItem> mTabs = new ArrayList<SamplePagerItem>();
 
-	@Override
-	public void onCreate(Bundle savedInstanceState) {
-		// TODO Auto-generated method stub
-		super.onCreate(savedInstanceState);
-		
-		spf = getActivity().getSharedPreferences(Parameter_Collections.SH_NAME,
-				Context.MODE_PRIVATE);
-		id_pegawai = spf.getString(Parameter_Collections.SH_ID_PEGAWAI, "");
-		
-		new Async_GetAllHistory().execute();		
+    @Override
+    public void onCreate(Bundle savedInstanceState) {
+        // TODO Auto-generated method stub
+        super.onCreate(savedInstanceState);
 
-	}
+        spf = getActivity().getSharedPreferences(Parameter_Collections.SH_NAME,
+                Context.MODE_PRIVATE);
+        id_pegawai = spf.getString(Parameter_Collections.SH_ID_PEGAWAI, "");
 
-	@Override
-	public View onCreateView(LayoutInflater inflater, ViewGroup container,
-			Bundle savedInstanceState) {
-		// TODO Auto-generated method stub
-		return inflater
-				.inflate(R.layout.test_fragment_sample, container, false);
-	}
+        new Async_GetAllHistory().execute();
 
-	@Override
-	public void onViewCreated(View view, Bundle savedInstanceState) {
-		// TODO Auto-generated method stub
-		super.onViewCreated(view, savedInstanceState);
-		mViewPager = (ViewPager) view.findViewById(R.id.viewpager);		
+    }
 
-		mSlidingTableLayout = (SlidingTabLayout) view
-				.findViewById(R.id.sliding_tabs);
-		
-		
-	}
+    @Override
+    public View onCreateView(LayoutInflater inflater, ViewGroup container,
+                             Bundle savedInstanceState) {
+        // TODO Auto-generated method stub
+        return inflater
+                .inflate(R.layout.test_fragment_sample, container, false);
+    }
 
-	class SampleFragmentPagerAdapter extends FragmentPagerAdapter {
+    @Override
+    public void onViewCreated(View view, Bundle savedInstanceState) {
+        // TODO Auto-generated method stub
+        super.onViewCreated(view, savedInstanceState);
+        mViewPager = (ViewPager) view.findViewById(R.id.viewpager);
 
-		public SampleFragmentPagerAdapter(FragmentManager fm) {
-			// TODO Auto-generated constructor stub
-			super(fm);
-		}
+        mSlidingTableLayout = (SlidingTabLayout) view
+                .findViewById(R.id.sliding_tabs);
 
-		@Override
-		public Fragment getItem(int posisi) {
-			// TODO Auto-generated method stub
-			return mTabs.get(posisi).createFragment(posisi);
 
-		}
+    }
 
-		@Override
-		public int getCount() {
-			// TODO Auto-generated method stub
-			return mTabs.size();
-		}
+    class SampleFragmentPagerAdapter extends FragmentPagerAdapter {
 
-		@Override
-		public CharSequence getPageTitle(int position) {
-			// TODO Auto-generated method stub
-			return mTabs.get(position).getTitle();
-		}
-	}
+        public SampleFragmentPagerAdapter(FragmentManager fm) {
+            // TODO Auto-generated constructor stub
+            super(fm);
+        }
 
-	static class SamplePagerItem {
-		private final CharSequence mTitle;
+        @Override
+        public Fragment getItem(int posisi) {
+            // TODO Auto-generated method stub
+            return mTabs.get(posisi).createFragment(posisi);
 
-		SamplePagerItem(CharSequence title) {
-			mTitle = title;
-		}
+        }
 
-		Fragment createFragment(int posisi) {
-			return Olx_ContentFragment.newInstance(mTitle, posisi,
-					data_Branding, data_Notif);
-		}
+        @Override
+        public int getCount() {
+            // TODO Auto-generated method stub
+            return mTabs.size();
+        }
 
-		CharSequence getTitle() {
-			return mTitle;
-		}
+        @Override
+        public CharSequence getPageTitle(int position) {
+            // TODO Auto-generated method stub
+            return mTabs.get(position).getTitle();
+        }
+    }
 
-	}
+    static class SamplePagerItem {
+        private final CharSequence mTitle;
 
-	public class Async_GetAllHistory extends AsyncTask<Void, Void, Void> {
-		Olx_DialogFragmentProgress pDialog;
-		String cCode, cMessage;
-		String total_data ="0";
+        SamplePagerItem(CharSequence title) {
+            mTitle = title;
+        }
 
-		@Override
-		protected void onPreExecute() {
-			// TODO Auto-generated method stub
-			super.onPreExecute();
-			data_Branding = new ArrayList<RowData_History>();
-			data_Notif = new ArrayList<RowData_Notif>();
-			
-			pDialog = new Olx_DialogFragmentProgress();
-			pDialog.show(getChildFragmentManager(), "");
-		}
+        Fragment createFragment(int posisi) {
+            return Olx_ContentFragment.newInstance(mTitle, posisi,
+                    data_Branding, data_Notif);
+        }
 
-		@Override
-		protected Void doInBackground(Void... params) {
-			// TODO Auto-generated method stub
-			try {
-//				sh = new Olx_ServiceHandlerJSON();
-//				getData_Branding();
-//				getData_Notif();
-			} catch (Exception e) {
+        CharSequence getTitle() {
+            return mTitle;
+        }
 
-			}
-			return null;
-		}
+    }
 
-		@Override
-		protected void onPostExecute(Void result) {
-			// TODO Auto-generated method stub
-			super.onPostExecute(result);
-			pDialog.dismiss();
+    public class Async_GetAllHistory extends AsyncTask<Void, Void, Void> {
+        Olx_DialogFragmentProgress pDialog;
+        String cCode, cMessage;
+        String total_data = "0";
+        Retrofit retrofit;
+        Test_RestAdapter restAdapter;
+        boolean dataVisit_isExisted, dataNotif_isExisted = false;
 
-			mTabs.add(new SamplePagerItem("History Branding"));
-			mTabs.add(new SamplePagerItem("History Notifikasi"));
-			
-			mViewPager.setAdapter(new SampleFragmentPagerAdapter(
-					getChildFragmentManager()));
-			mSlidingTableLayout.setViewPager(mViewPager);
-		}
+        @Override
+        protected void onPreExecute() {
+            // TODO Auto-generated method stub
+            super.onPreExecute();
+            data_Branding = new ArrayList<RowData_History>();
+            data_Notif = new ArrayList<RowData_Notif>();
 
-		private void getData_Branding() {
+            pDialog = new Olx_DialogFragmentProgress();
+            pDialog.show(getChildFragmentManager(), "");
+        }
+
+        @Override
+        protected Void doInBackground(Void... params) {
+            // TODO Auto-generated method stub
+            retrofit = new Retrofit.Builder().baseUrl(Parameter_Collections.URL_ENDPOINT)
+                    .addConverterFactory(GsonConverterFactory.create()).build();
+            restAdapter = retrofit.create(Test_RestAdapter.class);
+            Call<OlxHistoryVisit> call_history = restAdapter.getHistoryPegawai(id_pegawai);
+            try{
+                Response<OlxHistoryVisit> response = call_history.execute();
+                if (response.isSuccess()) {
+                    Integer total_data = response.body().getTotalData();
+                    if (total_data > 0) {
+                        for (int i = 0; i < response.body().getData().size(); i++) {
+                            String nama_outlet = response.body().getData().get(i).getNamaOutlet();
+                            String username_visit = response.body().getData().get(i).getUsernameVisit();
+                            String email_visit = response.body().getData().get(i).getEmailVisit();
+                            String topup_visit = response.body().getData().get(i).getTopupVisit();
+
+                            String alamat_outlet = response.body().getData().get(i).getAlamatOutlet();
+                            String telepon_outlet = response.body().getData().get(i).getPhoneVisit();
+                            String confirm = response.body().getData().get(i).getConfirm();
+                            data_Branding.add(new RowData_History(nama_outlet, username_visit, email_visit, topup_visit,
+                                    alamat_outlet, telepon_outlet, confirm));
+                        }
+                        dataVisit_isExisted = true;
+                    } else {
+                        Log.e("Error = ", "Data 0");
+                    }
+                } else {
+                    //gagal excute query
+                    Log.e("Error = ", response.errorBody().toString());
+                }
+            }catch (IOException e){
+
+            }
+
+            Call<OlxHistoryNotif> call_notif = restAdapter.getHistoryNotif();
+            try{
+                Response<OlxHistoryNotif> response = call_notif.execute();
+                if (response.isSuccess()) {
+                    String cCode = response.body().getJsonCode();
+
+                    if (cCode.equals("1")) {
+                        for (int i = 0; i < response.body().getData().size(); i++) {
+                            String id = response.body().getData().get(i).getIdNotification();
+                            String judul = response.body().getData().get(i).getNotificationTitle();
+                            String pesan = response.body().getData().get(i).getNotificationMessage();
+
+                            data_Notif.add(new RowData_Notif(id, judul, pesan));
+                        }
+                        dataNotif_isExisted = true;
+
+                    } else {
+                        Log.e("Error = ", "Data 0");
+                    }
+                } else {
+                    Log.e("Error = ", response.errorBody().toString());
+                }
+            }catch (IOException e){
+
+            }
+
+//            call_notif.enqueue(new Callback<OlxHistoryNotif>() {
+//                @Override
+//                public void onResponse(Response<OlxHistoryNotif> response, Retrofit retrofit) {
+//                    if (response.isSuccess()) {
+//                        String cCode = response.body().getJsonCode();
+//
+//                        if (cCode.equals("1")) {
+//                            for (int i = 0; i < response.body().getData().size(); i++) {
+//                                String id = response.body().getData().get(i).getIdNotification();
+//                                String judul = response.body().getData().get(i).getNotificationTitle();
+//                                String pesan = response.body().getData().get(i).getNotificationMessage();
+//
+//                                data_Notif.add(new RowData_Notif(id, judul, pesan));
+//                            }
+//                            dataNotif_isExisted = true;
+//
+//                        } else {
+//                            Log.e("Error = ", "Data 0");
+//                        }
+//                    } else {
+//                        Log.e("Error = ", response.errorBody().toString());
+//                    }
+//                }
+//
+//                @Override
+//                public void onFailure(Throwable t) {
+//                    Log.e("Error = ", "Gagal Konek ke Server");
+//                }
+//            });
+
+//            call_history.enqueue(new Callback<OlxHistoryVisit>() {
+//                @Override
+//                public void onResponse(Response<OlxHistoryVisit> response, Retrofit retrofit) {
+//                    if (response.isSuccess()) {
+//                        Integer total_data = response.body().getTotalData();
+//                        if (total_data > 0) {
+//                            for (int i = 0; i < response.body().getData().size(); i++) {
+//                                String nama_outlet = response.body().getData().get(i).getNamaOutlet();
+//                                String username_visit = response.body().getData().get(i).getUsernameVisit();
+//                                String email_visit = response.body().getData().get(i).getEmailVisit();
+//                                String topup_visit = response.body().getData().get(i).getTopupVisit();
+//
+//                                String alamat_outlet = response.body().getData().get(i).getAlamatOutlet();
+//                                String telepon_outlet = response.body().getData().get(i).getPhoneVisit();
+//                                String confirm = response.body().getData().get(i).getConfirm();
+//                                data_Branding.add(new RowData_History(nama_outlet, username_visit, email_visit, topup_visit,
+//                                        alamat_outlet, telepon_outlet, confirm));
+//                            }
+//                            dataVisit_isExisted = true;
+//                        } else {
+//                            Log.e("Error = ", "Data 0");
+//                        }
+//                    } else {
+//                        //gagal excute query
+//                        Log.e("Error = ", response.errorBody().toString());
+//                    }
+//
+//                }
+//
+//                @Override
+//                public void onFailure(Throwable t) {
+//                    Log.e("Error = ", "Gagal Konek Server");
+//                }
+//            });
+
+            return null;
+        }
+
+        @Override
+        protected void onPostExecute(Void result) {
+            // TODO Auto-generated method stub
+            super.onPostExecute(result);
+            pDialog.dismiss();
+            if(dataNotif_isExisted && dataVisit_isExisted){
+
+                mTabs.add(new SamplePagerItem("History Branding"));
+                mTabs.add(new SamplePagerItem("History Notifikasi"));
+
+                mViewPager.setAdapter(new SampleFragmentPagerAdapter(
+                        getChildFragmentManager()));
+                mSlidingTableLayout.setViewPager(mViewPager);
+            }else{
+                Toast.makeText(getContext(), "No Data", Toast.LENGTH_LONG).show();
+            }
+
+
+        }
+
+        private void getData_Branding() {
+
+
 //			JSONObject jObj = sh.json_get_history(id_pegawai);
-			JSONObject jObj = null;
-			
-			try{
-				total_data = jObj.getString(Parameter_Collections.TAG_TOTAL_VISIT_MAX_TOKO);
-				if(Integer.parseInt(total_data) > 0){
-					JSONArray jArray = jObj.getJSONArray(Parameter_Collections.TAG_DATA);
-					for(int i=0; i < jArray.length();i++){
-						JSONObject c = jArray.getJSONObject(i);
+            JSONObject jObj = null;
 
-						String nama_outlet = c.getString(Parameter_Collections.TAG_NAMA_OUTLET);
-						String username_visit = c.getString(Parameter_Collections.TAG_USERNAME_OUTLET_VISIT);
-						String email_visit = c.getString(Parameter_Collections.TAG_EMAIL_OUTLET_VISIT);
-						String topup_visit = c.getString(Parameter_Collections.TAG_TOPUP_OUTLET_VISIT);
+            try {
+                total_data = jObj.getString(Parameter_Collections.TAG_TOTAL_VISIT_MAX_TOKO);
+                if (Integer.parseInt(total_data) > 0) {
+                    JSONArray jArray = jObj.getJSONArray(Parameter_Collections.TAG_DATA);
+                    for (int i = 0; i < jArray.length(); i++) {
+                        JSONObject c = jArray.getJSONObject(i);
 
-						String alamat_outlet = c.getString(Parameter_Collections.TAG_ALAMAT_OUTLET);
-						String telepon_outlet = c.getString(Parameter_Collections.TAG_TELEPON_OUTLET);
-						String confirm = c.getString(Parameter_Collections.TAG_CONFIRMED_TOKO);
+                        String nama_outlet = c.getString(Parameter_Collections.TAG_NAMA_OUTLET);
+                        String username_visit = c.getString(Parameter_Collections.TAG_USERNAME_OUTLET_VISIT);
+                        String email_visit = c.getString(Parameter_Collections.TAG_EMAIL_OUTLET_VISIT);
+                        String topup_visit = c.getString(Parameter_Collections.TAG_TOPUP_OUTLET_VISIT);
 
-						data_Branding.add(new RowData_History(nama_outlet,username_visit, email_visit, topup_visit,
-								alamat_outlet,telepon_outlet,confirm));
-					}
-				}
-			}catch(JSONException e){
-				
-			}
+                        String alamat_outlet = c.getString(Parameter_Collections.TAG_ALAMAT_OUTLET);
+                        String telepon_outlet = c.getString(Parameter_Collections.TAG_TELEPON_OUTLET);
+                        String confirm = c.getString(Parameter_Collections.TAG_CONFIRMED_TOKO);
 
-		}
+                        data_Branding.add(new RowData_History(nama_outlet, username_visit, email_visit, topup_visit,
+                                alamat_outlet, telepon_outlet, confirm));
+                    }
+                }
+            } catch (JSONException e) {
+
+            }
+
+        }
 
 
+        private void getData_Notif() {
 
-		private void getData_Notif() {
-			
 
 //			JSONObject jObj = sh.json_get_allnotif();
-			JSONObject jObj = null;
-			Log.e("Log SH notif", jObj.toString());
+            JSONObject jObj = null;
+            Log.e("Log SH notif", jObj.toString());
 
-			try {
-				cCode = jObj.getString(Parameter_Collections.TAG_JSON_CODE);
-				if (cCode.equals("1")) {
-					JSONArray jArray = jObj
-							.getJSONArray(Parameter_Collections.TAG_DATA);
-					for (int i = 0; i < jArray.length(); i++) {
-						JSONObject c = jArray.getJSONObject(i);
-						String id = c
-								.getString(Parameter_Collections.TAG_ID_PESAN);
-						String judul = c
-								.getString(Parameter_Collections.TAG_JUDUL_PESAN);
-						String pesan = c
-								.getString(Parameter_Collections.TAG_PESAN);
+            try {
+                cCode = jObj.getString(Parameter_Collections.TAG_JSON_CODE);
+                if (cCode.equals("1")) {
+                    JSONArray jArray = jObj
+                            .getJSONArray(Parameter_Collections.TAG_DATA);
+                    for (int i = 0; i < jArray.length(); i++) {
+                        JSONObject c = jArray.getJSONObject(i);
+                        String id = c
+                                .getString(Parameter_Collections.TAG_ID_PESAN);
+                        String judul = c
+                                .getString(Parameter_Collections.TAG_JUDUL_PESAN);
+                        String pesan = c
+                                .getString(Parameter_Collections.TAG_PESAN);
 
-						data_Notif.add(new RowData_Notif(id, judul, pesan));
-					}
-				} else {
-					// NO Data
-					cMessage = jObj
-							.getString(Parameter_Collections.TAG_JSON_ERROR_MESSAGE);
-				}
-			} catch (JSONException e) {
-				cMessage = e.getMessage().toString();
-			}
-		}
-	}
+                        data_Notif.add(new RowData_Notif(id, judul, pesan));
+                    }
+                } else {
+                    // NO Data
+                    cMessage = jObj
+                            .getString(Parameter_Collections.TAG_JSON_ERROR_MESSAGE);
+                }
+            } catch (JSONException e) {
+                cMessage = e.getMessage().toString();
+            }
+        }
+    }
 
 }

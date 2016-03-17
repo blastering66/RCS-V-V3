@@ -6,6 +6,7 @@ import android.os.AsyncTask;
 import android.os.Bundle;
 import android.support.v7.app.ActionBar;
 import android.support.v7.app.AppCompatActivity;
+import android.util.Log;
 import android.view.MenuItem;
 import android.view.View;
 import android.widget.AdapterView;
@@ -19,9 +20,10 @@ import android.widget.TextView;
 import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
 
-import org.json.JSONArray;
-import org.json.JSONException;
-import org.json.JSONObject;
+import id.tech.util.Test_RestAdapter;
+import id.tech.POJO.OlxResponseRowCount;
+import id.tech.POJO.OlxResponseDataOutlet;
+import id.tech.util.Parameter_Collections;
 
 import java.lang.reflect.Type;
 import java.util.ArrayList;
@@ -29,6 +31,11 @@ import java.util.List;
 
 import id.tech.util.Parameter_Collections;
 import id.tech.util.RowData_JenisOutlet;
+import retrofit.Call;
+import retrofit.Callback;
+import retrofit.GsonConverterFactory;
+import retrofit.Response;
+import retrofit.Retrofit;
 
 /**
  * Created by macbook on 2/3/16.
@@ -76,7 +83,7 @@ public class Olx_DataOutlet_Activity extends AppCompatActivity{
         btn.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-//                new AsyncTask_UpdateDataOutlet().execute();
+                new AsyncTask_UpdateDataOutlet().execute();
             }
         });
 
@@ -189,5 +196,96 @@ public class Olx_DataOutlet_Activity extends AppCompatActivity{
     public void onBackPressed() {
         finish();
         overridePendingTransition(android.R.anim.fade_in, R.anim.slide_out_right);
+    }
+
+    private class AsyncTask_UpdateDataOutlet extends AsyncTask<Void, Void,Void> {
+        Olx_DialogFragmentProgress dialogProgress;
+        String outlet_Phone, outlet_Address, outlet_Email, outlet_Lokasi, outlet_Region;
+        String row_count, error_message, kode_outlet;
+        Test_RestAdapter restAdapter;
+
+        @Override
+        protected void onPreExecute() {
+            super.onPreExecute();
+            dialogProgress = new Olx_DialogFragmentProgress();
+            dialogProgress.show(getSupportFragmentManager(), "");
+
+            outlet_Phone = ed_outlet_phone.getText().toString();
+            outlet_Address = ed_outlet_address.getText().toString();
+            outlet_Lokasi = ed_outlet_lokasi.getText().toString();
+            outlet_Email = ed_outlet_email.getText().toString();
+            outlet_Region = ed_outlet_region.getText().toString();
+        }
+
+        @Override
+        protected Void doInBackground(Void... params) {
+            Retrofit retrofit = new Retrofit.Builder().baseUrl(Parameter_Collections.URL_ENDPOINT)
+                    .addConverterFactory(GsonConverterFactory.create()).build();
+            restAdapter = retrofit.create(Test_RestAdapter.class);
+            return null;
+        }
+
+        @Override
+        protected void onPostExecute(Void aVoid) {
+            Call<OlxResponseDataOutlet> call = restAdapter.inputDataOutlet(
+                    Parameter_Collections.KIND_OUTLET_POST,
+                    nama_outlet,outlet_Address,outlet_Phone,
+                    selected_id_jenis_outlet,outlet_Region,lati,longi,outlet_Email);
+
+            call.enqueue(new Callback<OlxResponseDataOutlet>() {
+                @Override
+                public void onResponse(Response<OlxResponseDataOutlet> response, Retrofit retrofit) {
+                    if(response.isSuccess()){
+                        row_count = response.body().getRowCount().toString();
+//                        row_count = "0";
+                        dialogProgress.dismiss();
+                        if(row_count.equals("1")){
+                            kode_outlet =  response.body().getKodeOutlet().toString();
+                            spf.edit().putString(Parameter_Collections.SH_KODE_OUTLET, kode_outlet).commit();
+                            spf.edit().putBoolean(Parameter_Collections.SH_OUTLET_UPDATED, true).commit();
+                            spf.edit().putBoolean(Parameter_Collections.SH_OUTLET_VISITED, false).commit();
+
+                            Olx_DialogLocationConfirmation dialog = new Olx_DialogLocationConfirmation();
+                            dialog.setContext(getApplicationContext());
+                            dialog.setText("Input Data Outlet Success");
+                            dialog.setFrom(9);
+                            dialog.setCancelable(false);
+                            dialog.show(getSupportFragmentManager(), "");
+                        }else{
+                            //gagal excute query
+                            Olx_DialogLocationConfirmation dialog = new Olx_DialogLocationConfirmation();
+                            dialog.setContext(getApplicationContext());
+                            dialog.setText("Toko sudah terdaftar");
+                            dialog.setFrom(9);
+                            dialog.setCancelable(false);
+                            dialog.show(getSupportFragmentManager(), "");
+                        }
+
+
+
+                    }else{
+                        //GAGAL konek ke server
+                        dialogProgress.dismiss();
+                        Olx_DialogLocationConfirmation dialog = new Olx_DialogLocationConfirmation();
+                        dialog.setContext(getApplicationContext());
+                        dialog.setText("Error pada Server , Error Message" + response.errorBody());
+                        dialog.setFrom(9);
+                        dialog.setCancelable(false);
+                        dialog.show(getSupportFragmentManager(), "");
+                    }
+                }
+
+                @Override
+                public void onFailure(Throwable t) {
+                    dialogProgress.dismiss();
+                    Olx_DialogLocationConfirmation dialog = new Olx_DialogLocationConfirmation();
+                    dialog.setContext(getApplicationContext());
+                    dialog.setText("Gagal Koneksi ke Server, Coba Lagi" );
+                    dialog.setFrom(9);
+                    dialog.setCancelable(false);
+                    dialog.show(getSupportFragmentManager(), "");
+                }
+            });
+        }
     }
 }

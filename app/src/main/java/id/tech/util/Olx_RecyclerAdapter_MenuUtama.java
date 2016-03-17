@@ -157,7 +157,7 @@ public class Olx_RecyclerAdapter_MenuUtama extends
         switch (arg1) {
             case 0:
                 Animation anim_from_left= AnimationUtils.loadAnimation(context, R.anim.slide_in_left);
-                anim_from_left.setStartOffset(1000);
+                anim_from_left.setStartOffset(500);
                 arg0.wrapper.startAnimation(anim_from_left);
 
                 arg0.img.setImageResource(R.drawable.menu_wp_absen);
@@ -168,7 +168,7 @@ public class Olx_RecyclerAdapter_MenuUtama extends
             case 1:
 
                 Animation anim_from_right = AnimationUtils.loadAnimation(context, R.anim.slide_in_right);
-                anim_from_right.setStartOffset(1500);
+                anim_from_right.setStartOffset(750);
                 arg0.wrapper.startAnimation(anim_from_right);
                 arg0.img.setImageResource(R.drawable.menu_wp_outlet);
                 arg0.wrapper.setBackgroundColor(context.getResources().getColor(
@@ -178,7 +178,7 @@ public class Olx_RecyclerAdapter_MenuUtama extends
                 break;
             case 2:
                 Animation anim_from_left_1= AnimationUtils.loadAnimation(context, R.anim.slide_in_left);
-                anim_from_left_1.setStartOffset(2000);
+                anim_from_left_1.setStartOffset(1000);
                 arg0.wrapper.startAnimation(anim_from_left_1);
                 arg0.img.setImageResource(R.drawable.menu_wp_history);
                 arg0.wrapper.setBackgroundColor(context.getResources().getColor(
@@ -188,7 +188,7 @@ public class Olx_RecyclerAdapter_MenuUtama extends
                 break;
             case 3:
                 Animation anim_from_right_2 = AnimationUtils.loadAnimation(context, R.anim.slide_in_right);
-                anim_from_right_2.setStartOffset(2500);
+                anim_from_right_2.setStartOffset(1250);
                 arg0.wrapper.startAnimation(anim_from_right_2);
                 arg0.img.setImageResource(R.drawable.menu_wp_gallery);
                 arg0.wrapper.setBackgroundColor(context.getResources().getColor(
@@ -198,7 +198,7 @@ public class Olx_RecyclerAdapter_MenuUtama extends
 
             case 4:
                 Animation anim_from_left_03= AnimationUtils.loadAnimation(context, R.anim.slide_in_left);
-                anim_from_left_03.setStartOffset(3000);
+                anim_from_left_03.setStartOffset(750);
                 arg0.wrapper.startAnimation(anim_from_left_03);
                 arg0.img.setImageResource(R.drawable.menu_wp_cek_stok);
                 arg0.wrapper.setBackgroundColor(context.getResources().getColor(

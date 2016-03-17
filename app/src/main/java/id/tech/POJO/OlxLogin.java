@@ -1,14 +1,15 @@
 package id.tech.POJO;
 import com.google.gson.annotations.Expose;
+import com.google.gson.annotations.SerializedName;
 
 public class OlxLogin {
-//    @SerializedName("json_code")
+    @SerializedName("json_code")
     @Expose
     private String jsonCode;
-//    @SerializedName("message")
+    @SerializedName("message")
     @Expose
     private String message;
-//    @SerializedName("data")
+    @SerializedName("data")
     @Expose
     private Data data ;
     public String getJsonCode() {
@@ -31,28 +32,28 @@ public class OlxLogin {
     }
 
     public class Data{
-//        @SerializedName("id_pegawai")
+        @SerializedName("id_pegawai")
         @Expose
         private Integer idPegawai;
-//        @SerializedName("nama_pegawai")
+        @SerializedName("nama_pegawai")
         @Expose
         private String namaPegawai;
-//        @SerializedName("email_pegawai")
+        @SerializedName("email_pegawai")
         @Expose
         private String emailPegawai;
-//        @SerializedName("telepon_pegawai")
+        @SerializedName("telepon_pegawai")
         @Expose
         private String teleponPegawai;
-//        @SerializedName("jabatan")
+        @SerializedName("jabatan")
         @Expose
         private String jabatan;
-//        @SerializedName("region")
+        @SerializedName("region")
         @Expose
         private String region;
-//        @SerializedName("username")
+        @SerializedName("username")
         @Expose
         private String username;
-//        @SerializedName("created_date")
+        @SerializedName("created_date")
         @Expose
         private String createdDate;
 

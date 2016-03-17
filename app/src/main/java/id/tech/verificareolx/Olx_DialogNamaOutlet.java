@@ -1,5 +1,8 @@
 package id.tech.verificareolx;
 
+import id.tech.util.Test_RestAdapter;
+import id.tech.POJO.OlxAbsensi;
+import id.tech.POJO.OlxAbsensi_Object;
 import android.app.ProgressDialog;
 import android.content.Context;
 import android.content.SharedPreferences;
@@ -29,159 +32,195 @@ import java.net.MalformedURLException;
 import java.net.URL;
 
 import id.tech.util.Parameter_Collections;
+import retrofit.Call;
+import retrofit.Callback;
+import retrofit.GsonConverterFactory;
+import retrofit.Response;
+import retrofit.Retrofit;
 
-public class Olx_DialogNamaOutlet extends FragmentActivity{
-	public static  String empty_json_prefix = "{json_code: \"0\",error_message: \"";
-	public static  String empty_json_end = "\"}";
+public class Olx_DialogNamaOutlet extends FragmentActivity {
+    public static String empty_json_prefix = "{json_code: \"0\",error_message: \"";
+    public static String empty_json_end = "\"}";
 
-	private EditText ed_NamaOutlet;
-//	private ImageView img_Selfie_Landscape,img_Selfie_Portrait;
-	private Button btn, btn_tgl;
-	private String kode_outlet, nama_outlet;
-	private SharedPreferences spf;
-	private String id_pegawai, mUrl_Img_00, tipe_absensi;
+    private EditText ed_NamaOutlet;
+    //	private ImageView img_Selfie_Landscape,img_Selfie_Portrait;
+    private Button btn, btn_tgl;
+    private String kode_outlet, nama_outlet;
+    private SharedPreferences spf;
+    private String id_pegawai, mUrl_Img_00, tipe_absensi;
 
-	@Override
-	protected void onCreate(Bundle savedInstanceState) {
-		// TODO Auto-generated method stub
-		requestWindowFeature(Window.FEATURE_NO_TITLE);
-		super.onCreate(savedInstanceState);
-		setContentView(R.layout.layout_dialog_nama_outlet);
+    @Override
+    protected void onCreate(Bundle savedInstanceState) {
+        // TODO Auto-generated method stub
+        requestWindowFeature(Window.FEATURE_NO_TITLE);
+        super.onCreate(savedInstanceState);
+        setContentView(R.layout.layout_dialog_nama_outlet);
 
-		spf = getSharedPreferences(Parameter_Collections.SH_NAME, Context.MODE_PRIVATE);
-		id_pegawai = spf.getString(Parameter_Collections.SH_ID_PEGAWAI, "0");
-		tipe_absensi = getIntent().getStringExtra(Parameter_Collections.EXTRA_ABSENSI);
+        spf = getSharedPreferences(Parameter_Collections.SH_NAME, Context.MODE_PRIVATE);
+        id_pegawai = spf.getString(Parameter_Collections.SH_ID_PEGAWAI, "0");
+        tipe_absensi = getIntent().getStringExtra(Parameter_Collections.EXTRA_ABSENSI);
 
-		ed_NamaOutlet = (EditText)findViewById(R.id.ed_nama_outlet);
+        ed_NamaOutlet = (EditText) findViewById(R.id.ed_nama_outlet);
 
-		if(tipe_absensi.equals("2")){
-			kode_outlet = spf.getString(Parameter_Collections.SH_KODE_OUTLET, "0");
-			nama_outlet = spf.getString(Parameter_Collections.SH_NAMA_OUTLET, "0");
+        if (tipe_absensi.equals("2")) {
+            kode_outlet = spf.getString(Parameter_Collections.SH_KODE_OUTLET, "0");
+            nama_outlet = spf.getString(Parameter_Collections.SH_NAMA_OUTLET, "0");
 
-			ed_NamaOutlet.setText(nama_outlet);
-			ed_NamaOutlet.setEnabled(false);
-		}
+            ed_NamaOutlet.setText(nama_outlet);
+            ed_NamaOutlet.setEnabled(false);
+        }
 
-		btn = (Button)findViewById(R.id.btn);
+        btn = (Button) findViewById(R.id.btn);
 
-		btn.setOnClickListener(new OnClickListener() {
+        btn.setOnClickListener(new OnClickListener() {
 
-			@Override
-			public void onClick(View v) {
-				// TODO Auto-generated method stub
-				String cNamaToko = ed_NamaOutlet.getText().toString();
-				if(cNamaToko.equals("") || cNamaToko.isEmpty()){
-					Toast.makeText(getApplicationContext(), "Nama Toko tidak boleh Kosong", Toast.LENGTH_LONG).show();
-				}else{
-					new AsyncTask_Absensi().execute();
-				}
+            @Override
+            public void onClick(View v) {
+                // TODO Auto-generated method stub
+                String cNamaToko = ed_NamaOutlet.getText().toString();
+                if (cNamaToko.equals("") || cNamaToko.isEmpty()) {
+                    Toast.makeText(getApplicationContext(), "Nama Toko tidak boleh Kosong", Toast.LENGTH_LONG).show();
+                } else {
+                    new AsyncTask_Absensi().execute();
+                }
 
 
-
-			}
-		});
+            }
+        });
 
 //		new AsyncTask_GetJenis_Outlet().execute();
-	}
+    }
 
 
+    private class AsyncTask_Absensi extends AsyncTask<Void, Void, String> {
+        ProgressDialog pdialog;
+        String respondMessage;
+        JSONObject jsonResult;
+        Olx_DialogFragmentProgress dialogProgress;
+        String cNamaToko;
+        int serverRespondCode = 0;
 
-	private class AsyncTask_Absensi extends AsyncTask<Void,Void,String>{
-		ProgressDialog pdialog;
-		String respondMessage;
-		JSONObject jsonResult;
-		Olx_DialogFragmentProgress dialogProgress;
-		String cNamaToko;
-		int serverRespondCode = 0;
+        String url_file00;
+        File sourceFile00;
+        FileInputStream fileInputStream00;
+        private String row_count;
+        Test_RestAdapter restAdapter;
 
-		String url_file00;
-		File sourceFile00;
-		FileInputStream fileInputStream00;
-		private String row_count;
+        @Override
+        protected void onPreExecute() {
+            super.onPreExecute();
+            dialogProgress = new Olx_DialogFragmentProgress();
+            dialogProgress.show(getSupportFragmentManager(), "");
 
-		@Override
-		protected void onPreExecute() {
-			super.onPreExecute();
-			dialogProgress = new Olx_DialogFragmentProgress();
-			dialogProgress.show(getSupportFragmentManager(), "");
+            cNamaToko = ed_NamaOutlet.getText().toString();
+            mUrl_Img_00 = Parameter_Collections.URL_FOTO_ABSEN;
+        }
 
-			cNamaToko = ed_NamaOutlet.getText().toString();
-			mUrl_Img_00 = Parameter_Collections.URL_FOTO_ABSEN;
-		}
-
-		@Override
-		protected String doInBackground(Void... params) {
-			return uploadDataForm(mUrl_Img_00);
-		}
-
-		@Override
-		protected void onPostExecute(String result) {
-			super.onPostExecute(result);
-			JSONObject jObj = jsonResult;
-			try{
-				row_count = jObj.getString(Parameter_Collections.TAG_ROWCOUNT);
-//				kode_outlet = jObj.getString(Parameter_Collections.TAG_KODE_OUTLET);
-				kode_outlet = "";
-				nama_outlet = cNamaToko;
-
-			}catch(JSONException e){
-				row_count = "0";
-				kode_outlet="0";
-			}
-
-			if(row_count.equals("1")){
-				dialogProgress.dismiss();
-
-				if(tipe_absensi.equals("1")){
-					spf.edit().putString(Parameter_Collections.SH_KODE_OUTLET, kode_outlet).commit();
-					// EDITAN OLX
-					spf.edit()
-							.putBoolean(Parameter_Collections.SH_ABSENTED, true)
-							.commit();
-					spf.edit().putString(Parameter_Collections.SH_NAMA_OUTLET, nama_outlet).commit();
-					spf.edit().putString(Parameter_Collections.SH_KODE_OUTLET, kode_outlet).commit();
-				}else{
-					spf.edit().putBoolean(Parameter_Collections.SH_ABSENTED, false).commit();
-					spf.edit().putBoolean(Parameter_Collections.SH_OUTLET_UPDATED, false).commit();
-					spf.edit().putBoolean(Parameter_Collections.SH_OUTLET_VISITED, false).commit();
-					spf.edit().putString(Parameter_Collections.SH_KODE_OUTLET, "0").commit();
-					spf.edit().putString(Parameter_Collections.SH_NAMA_OUTLET, "0").commit();
-				}
+//		@Override
+//		protected String doInBackground(Void... params) {
+//			return uploadDataForm(mUrl_Img_00);
+//		}
 
 
-				Olx_DialogLocationConfirmation dialog = new Olx_DialogLocationConfirmation();
-				dialog.setContext(getApplicationContext());
-				dialog.setText("Absensi Success");
-				dialog.setFrom(9);
-				dialog.setCancelable(false);
-				dialog.show(getSupportFragmentManager(), "");
-//				Toast.makeText(getApplicationContext(), "Update Branding Success", Toast.LENGTH_LONG).show();
-//				finish();
-			}else{
-				dialogProgress.dismiss();
+        @Override
+        protected String doInBackground(Void... params) {
+            Retrofit retrofit = new Retrofit.Builder().baseUrl(Parameter_Collections.URL_ENDPOINT)
+                    .addConverterFactory(GsonConverterFactory.create()).build();
+            restAdapter = retrofit.create(Test_RestAdapter.class);
+            return "1";
+        }
 
-				Olx_DialogLocationConfirmation dialog = new Olx_DialogLocationConfirmation();
-				dialog.setContext(getApplicationContext());
-				dialog.setText(result);
-				dialog.setFrom(9);
-				dialog.setCancelable(false);
-				dialog.show(getSupportFragmentManager(), "");
-//				Toast.makeText(getApplicationContext(), result, Toast.LENGTH_LONG).show();
-//				finish();
-			}
+        @Override
+        protected void onPostExecute(String result) {
+            super.onPostExecute(result);
+//			JSONObject jObj = jsonResult;
+            String lat_now = spf.getString(Parameter_Collections.TAG_LATITUDE_NOW, "");
+            String long_now = spf.getString(Parameter_Collections.TAG_LONGITUDE_NOW, "");
 
-		}
+            Call<OlxAbsensi> call_absensi = restAdapter.absensi("absensi","true",cNamaToko, id_pegawai, tipe_absensi,
+                    lat_now, long_now);
 
-		private String uploadDataForm(String url_gambar00){
-			HttpURLConnection conn = null;
-			DataOutputStream dos = null;
-			String lineEnd = "\r\n";
-			String twoHyphens = "--";
-			String boundary = "*****";
-			int bytesRead, bytesAvailable, bufferSize;
-			byte[] buffer;
-			int maxBufferSize = 1 * 1024 * 1024;
+            call_absensi.enqueue(new Callback<OlxAbsensi>() {
+                @Override
+                public void onResponse(Response<OlxAbsensi> response, Retrofit retrofit) {
+                    if (response.isSuccess()) {
 
+                        Log.e("Result = ", response.raw().toString());
+                        Log.e("Respond = ", response.body().toString());
+                        row_count = response.body().getRowCount().toString();
+                        kode_outlet = "";
+                        nama_outlet = cNamaToko;
+                        if (row_count.equals("1")) {
+                            dialogProgress.dismiss();
+
+                            if (tipe_absensi.equals("1")) {
+                                spf.edit().putString(Parameter_Collections.SH_KODE_OUTLET, kode_outlet).commit();
+                                // EDITAN OLX
+                                spf.edit()
+                                        .putBoolean(Parameter_Collections.SH_ABSENTED, true)
+                                        .commit();
+                                spf.edit().putString(Parameter_Collections.SH_NAMA_OUTLET, nama_outlet).commit();
+                                spf.edit().putString(Parameter_Collections.SH_KODE_OUTLET, kode_outlet).commit();
+                            } else {
+                                spf.edit().putBoolean(Parameter_Collections.SH_ABSENTED, false).commit();
+                                spf.edit().putBoolean(Parameter_Collections.SH_OUTLET_UPDATED, false).commit();
+                                spf.edit().putBoolean(Parameter_Collections.SH_OUTLET_VISITED, false).commit();
+                                spf.edit().putString(Parameter_Collections.SH_KODE_OUTLET, "0").commit();
+                                spf.edit().putString(Parameter_Collections.SH_NAMA_OUTLET, "0").commit();
+                            }
+
+
+                            Olx_DialogLocationConfirmation dialog = new Olx_DialogLocationConfirmation();
+                            dialog.setContext(getApplicationContext());
+                            dialog.setText("Absensi Success");
+                            dialog.setFrom(9);
+                            dialog.setCancelable(false);
+                            dialog.show(getSupportFragmentManager(), "");
+                        } else {
+                            dialogProgress.dismiss();
+
+                            Olx_DialogLocationConfirmation dialog = new Olx_DialogLocationConfirmation();
+                            dialog.setContext(getApplicationContext());
+                            dialog.setText(response.message().toString());
+                            dialog.setFrom(9);
+                            dialog.setCancelable(false);
+                            dialog.show(getSupportFragmentManager(), "");
+                        }
+                    } else {
+                        Olx_DialogLocationConfirmation dialog = new Olx_DialogLocationConfirmation();
+                        dialog.setContext(getApplicationContext());
+                        dialog.setText(response.errorBody().toString());
+                        dialog.setFrom(9);
+                        dialog.setCancelable(false);
+                        dialog.show(getSupportFragmentManager(), "");
+
+                    }
+                }
+
+                @Override
+                public void onFailure(Throwable t) {
+                    Log.e("Error absen = ", t.getMessage().toString());
+                    Olx_DialogLocationConfirmation dialog = new Olx_DialogLocationConfirmation();
+                    dialog.setContext(getApplicationContext());
+                    dialog.setText("Gagal koneksi ke Server, Coba Lagi");
+                    dialog.setFrom(9);
+                    dialog.setCancelable(false);
+                    dialog.show(getSupportFragmentManager(), "");
+                }
+            });
+
+
+        }
+
+        private String uploadDataForm(String url_gambar00) {
+            HttpURLConnection conn = null;
+            DataOutputStream dos = null;
+            String lineEnd = "\r\n";
+            String twoHyphens = "--";
+            String boundary = "*****";
+            int bytesRead, bytesAvailable, bufferSize;
+            byte[] buffer;
+            int maxBufferSize = 1 * 1024 * 1024;
 
 
 //			if(url_gambar00 != null){
@@ -190,26 +229,26 @@ public class Olx_DialogNamaOutlet extends FragmentActivity{
 //			}
 
 
-			try {
-				URL url = new URL(Parameter_Collections.URL_INSERT);
+            try {
+                URL url = new URL(Parameter_Collections.URL_INSERT);
 
-				conn = (HttpURLConnection) url.openConnection();
-				conn.setConnectTimeout(60000);
+                conn = (HttpURLConnection) url.openConnection();
+                conn.setConnectTimeout(60000);
 
-				conn.setDoInput(true);
-				conn.setDoOutput(true);
-				conn.setUseCaches(false);
-				conn.setRequestMethod("POST");
+                conn.setDoInput(true);
+                conn.setDoOutput(true);
+                conn.setUseCaches(false);
+                conn.setRequestMethod("POST");
 
-				conn.setRequestProperty("ENCTYPE", "multipart/form-data");
-				conn.setRequestProperty("Content-Type",
-						"multipart/form-data;boundary=" + boundary);
+                conn.setRequestProperty("ENCTYPE", "multipart/form-data");
+                conn.setRequestProperty("Content-Type",
+                        "multipart/form-data;boundary=" + boundary);
 //				if(url_gambar00 != null){
 //					conn.setRequestProperty("img0", url_file00);
 //				}
 
 
-				dos = new DataOutputStream(conn.getOutputStream());
+                dos = new DataOutputStream(conn.getOutputStream());
 
 //				if(url_gambar00 != null){
 //					fileInputStream00 = new FileInputStream(
@@ -238,86 +277,86 @@ public class Olx_DialogNamaOutlet extends FragmentActivity{
 //
 //				}
 
-				// param kind
-				dos.writeBytes(twoHyphens + boundary + lineEnd);
-				dos.writeBytes("Content-Disposition: form-data; name=\""
-						+ Parameter_Collections.KIND + "\"" + lineEnd);
-				dos.writeBytes(lineEnd);
-				dos.writeBytes(Parameter_Collections.KIND_ABSEN + lineEnd);
+                // param kind
+                dos.writeBytes(twoHyphens + boundary + lineEnd);
+                dos.writeBytes("Content-Disposition: form-data; name=\""
+                        + Parameter_Collections.KIND + "\"" + lineEnd);
+                dos.writeBytes(lineEnd);
+                dos.writeBytes(Parameter_Collections.KIND_ABSEN + lineEnd);
 
-				// param mobile
-				dos.writeBytes(twoHyphens + boundary + lineEnd);
-				dos.writeBytes("Content-Disposition: form-data; name=\""
-						+ Parameter_Collections.KIND_MOBILE + "\"" + lineEnd);
-				dos.writeBytes(lineEnd);
-				dos.writeBytes("true" + lineEnd);
+                // param mobile
+                dos.writeBytes(twoHyphens + boundary + lineEnd);
+                dos.writeBytes("Content-Disposition: form-data; name=\""
+                        + Parameter_Collections.KIND_MOBILE + "\"" + lineEnd);
+                dos.writeBytes(lineEnd);
+                dos.writeBytes("true" + lineEnd);
 
-				Log.e("Kind Mobile True", cNamaToko);
+                Log.e("Kind Mobile True", cNamaToko);
 
-				// param kode toko
-				dos.writeBytes(twoHyphens + boundary + lineEnd);
-				dos.writeBytes("Content-Disposition: form-data; name=\""
-						+ Parameter_Collections.TAG_NAMA_OUTLET + "\"" + lineEnd);
-				dos.writeBytes(lineEnd);
-				dos.writeBytes(cNamaToko + lineEnd);
+                // param kode toko
+                dos.writeBytes(twoHyphens + boundary + lineEnd);
+                dos.writeBytes("Content-Disposition: form-data; name=\""
+                        + Parameter_Collections.TAG_NAMA_OUTLET + "\"" + lineEnd);
+                dos.writeBytes(lineEnd);
+                dos.writeBytes(cNamaToko + lineEnd);
 
-				Log.e("Nama Outlet", cNamaToko);
+                Log.e("Nama Outlet", cNamaToko);
 
 
-				// param id jenis outlet
-				dos.writeBytes(twoHyphens + boundary + lineEnd);
-				dos.writeBytes("Content-Disposition: form-data; name=\""
-						+ Parameter_Collections.TAG_ID_JENIS_OUTLET + "\"" + lineEnd);
-				dos.writeBytes(lineEnd);
+                // param id jenis outlet
+                dos.writeBytes(twoHyphens + boundary + lineEnd);
+                dos.writeBytes("Content-Disposition: form-data; name=\""
+                        + Parameter_Collections.TAG_ID_JENIS_OUTLET + "\"" + lineEnd);
+                dos.writeBytes(lineEnd);
 
 //				if(tipe_absensi.equals("2")){
 //					dos.writeBytes("" + lineEnd);
 //				}else{
 //					dos.writeBytes(selected_id_jenis_outlet + lineEnd);
 //				}
-				dos.writeBytes("" + lineEnd);
+                dos.writeBytes("" + lineEnd);
 
 
-				// param id pegawai
-				dos.writeBytes(twoHyphens + boundary + lineEnd);
-				dos.writeBytes("Content-Disposition: form-data; name=\""
-						+ Parameter_Collections.TAG_ID_PEGAWAI + "\"" + lineEnd);
-				dos.writeBytes(lineEnd);
-				dos.writeBytes(id_pegawai + lineEnd);
+                // param id pegawai
+                dos.writeBytes(twoHyphens + boundary + lineEnd);
+                dos.writeBytes("Content-Disposition: form-data; name=\""
+                        + Parameter_Collections.TAG_ID_PEGAWAI + "\"" + lineEnd);
+                dos.writeBytes(lineEnd);
+                dos.writeBytes(id_pegawai + lineEnd);
 
-				// param id pegawai
-				dos.writeBytes(twoHyphens + boundary + lineEnd);
-				dos.writeBytes("Content-Disposition: form-data; name=\""
-						+ Parameter_Collections.TAG_TIPE_ABSENSI + "\"" + lineEnd);
-				dos.writeBytes(lineEnd);
-				dos.writeBytes(tipe_absensi + lineEnd);
+                // param id pegawai
+                dos.writeBytes(twoHyphens + boundary + lineEnd);
+                dos.writeBytes("Content-Disposition: form-data; name=\""
+                        + Parameter_Collections.TAG_TIPE_ABSENSI + "\"" + lineEnd);
+                dos.writeBytes(lineEnd);
+                dos.writeBytes(tipe_absensi + lineEnd);
 
-				// param latitude
-				dos.writeBytes(twoHyphens + boundary + lineEnd);
-				dos.writeBytes("Content-Disposition: form-data; name=\""
-						+ Parameter_Collections.TAG_LATITUDE_ABSENSI + "\"" + lineEnd);
-				dos.writeBytes(lineEnd);
-				dos.writeBytes(spf.getString(Parameter_Collections.TAG_LATITUDE_NOW, "") + lineEnd);
+                // param latitude
+                dos.writeBytes(twoHyphens + boundary + lineEnd);
+                dos.writeBytes("Content-Disposition: form-data; name=\""
+                        + Parameter_Collections.TAG_LATITUDE_ABSENSI + "\"" + lineEnd);
+                dos.writeBytes(lineEnd);
+                dos.writeBytes(spf.getString(Parameter_Collections.TAG_LATITUDE_NOW, "") + lineEnd);
 
-				// param longitude
-				dos.writeBytes(twoHyphens + boundary + lineEnd);
-				dos.writeBytes("Content-Disposition: form-data; name=\""
-						+ Parameter_Collections.TAG_LONGITUDE_ABSENSI + "\"" + lineEnd);
-				dos.writeBytes(lineEnd);
-				dos.writeBytes(spf.getString(Parameter_Collections.TAG_LONGITUDE_NOW, "")+ lineEnd);
-				dos.writeBytes(twoHyphens + boundary + twoHyphens + lineEnd);
+                // param longitude
+                dos.writeBytes(twoHyphens + boundary + lineEnd);
+                dos.writeBytes("Content-Disposition: form-data; name=\""
+                        + Parameter_Collections.TAG_LONGITUDE_ABSENSI + "\"" + lineEnd);
+                dos.writeBytes(lineEnd);
+                dos.writeBytes(spf.getString(Parameter_Collections.TAG_LONGITUDE_NOW, "") + lineEnd);
+                dos.writeBytes(twoHyphens + boundary + twoHyphens + lineEnd);
 
 
-				serverRespondCode = conn.getResponseCode();
-				respondMessage = conn.getResponseMessage();
+                serverRespondCode = conn.getResponseCode();
+                respondMessage = conn.getResponseMessage();
 
-				Log.e("RESPOND", respondMessage);
+                Log.e("RESPOND", respondMessage);
 
-				if (serverRespondCode == 200) {
-					Log.e("CODE ", "Success Upload");
-				} else {
-					Log.e("CODE ", "Success failed");
-				}
+                if (serverRespondCode == 200) {
+                    Log.e("CODE ", "Success Upload");
+                } else {
+                    Log.e("CODE ", "Success failed");
+                }
 
 
 //				if(url_gambar00 != null){
@@ -325,29 +364,29 @@ public class Olx_DialogNamaOutlet extends FragmentActivity{
 //				}
 
 
-				dos.flush();
+                dos.flush();
 
-				InputStream is = conn.getInputStream();
-				int ch;
+                InputStream is = conn.getInputStream();
+                int ch;
 
-				StringBuffer buff = new StringBuffer();
-				while ((ch = is.read()) != -1) {
-					buff.append((char) ch);
-				}
-				Log.e("publish", buff.toString());
+                StringBuffer buff = new StringBuffer();
+                while ((ch = is.read()) != -1) {
+                    buff.append((char) ch);
+                }
+                Log.e("publish", buff.toString());
 
-				jsonResult = new JSONObject(buff.toString());
-				dos.close();
+                jsonResult = new JSONObject(buff.toString());
+                dos.close();
 
-			}catch (MalformedURLException ex) {
-				ex.printStackTrace();
-				return empty_json_prefix + ex.getMessage().toString() + empty_json_end;
-			} catch (Exception e) {
-				e.printStackTrace();
-				return empty_json_prefix + e.getMessage().toString() + empty_json_end;
-			}
-			return respondMessage;
-		}
-	}
+            } catch (MalformedURLException ex) {
+                ex.printStackTrace();
+                return empty_json_prefix + ex.getMessage().toString() + empty_json_end;
+            } catch (Exception e) {
+                e.printStackTrace();
+                return empty_json_prefix + e.getMessage().toString() + empty_json_end;
+            }
+            return respondMessage;
+        }
+    }
 
 }
