@@ -22,7 +22,7 @@ public class BootCompletedReceiver_UpdateJenisOutlet extends BroadcastReceiver{
 			e.printStackTrace();
 		}
 		
-		Intent notif_service = new Intent(context, Notif_Service.class);
+		Intent notif_service = new Intent(context, Olx_UpdateJenisOutlet_Service.class);
 		notif_service.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
 		notif_service.addFlags(Intent.FLAG_RECEIVER_NO_ABORT);
 		//add FLAG_RECEIVER_FOREGROUND to force the intent in foreground

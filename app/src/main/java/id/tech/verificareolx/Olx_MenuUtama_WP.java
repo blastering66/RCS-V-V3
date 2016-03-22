@@ -136,11 +136,13 @@ public class Olx_MenuUtama_WP extends ActionBarActivity {
 				@Override
 				public void onResponse(Response<OlxProfile> response, Retrofit retrofit) {
 
+
 					if(response.isSuccess()){
 						String cCode = response.body().getJsonCode().toString();
 						if(cCode.equals("1")) {
 							String cNama_Pegawai = response.body().getData().getNamaPegawai();
-							String cUrl_ImgProfilePic = "";
+							String cUrl_ImgProfilePic = Parameter_Collections.URL_GAMBAR_THUMB +
+									response.body().getData().getImages().get(0).getNamaImage();
 							String total_visited = response.body().getData().getTotalVisit();
 							String total_visited_daily = response.body().getData().getTotalVisitDaily();
 							String jumlah_target = response.body().getData().getJumlahTarget();
@@ -175,6 +177,9 @@ public class Olx_MenuUtama_WP extends ActionBarActivity {
 
 				@Override
 				public void onFailure(Throwable t) {
+					Log.e("Failure = ", t.getCause().toString());
+					Log.e("Failure = ", t.getLocalizedMessage().toString());
+					Log.e("Failure = ", t.getMessage().toString());
 					adapter_slider = new Olx_RecyclerAdapter_Slider_Empty();
 					rv_slider.setAdapter(adapter_slider);
 					Toast.makeText(getApplicationContext(), "Gagal koneksi ke Server", Toast.LENGTH_LONG).show();
@@ -184,6 +189,11 @@ public class Olx_MenuUtama_WP extends ActionBarActivity {
 
 		}
 	}
-	
 
+
+	@Override
+	protected void onPause() {
+		super.onPause();
+
+	}
 }

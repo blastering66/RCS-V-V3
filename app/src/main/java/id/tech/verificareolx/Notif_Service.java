@@ -66,11 +66,8 @@ public class Notif_Service extends Service{
 		myIntent = intent;
 		
 		Calendar c = Calendar.getInstance();
-//		activate = new Intent(Notif_Service.this, NotifBroadcastReceiver.class);
-//		activate = new Intent(Notif_Service.this, Verificare_RegistrationIntentService.class);
-//		activate.putExtra("code", "1");
 		
-		alarmIntent = PendingIntent.getBroadcast(getApplicationContext(), 112, activate,PendingIntent.FLAG_CANCEL_CURRENT);
+		alarmIntent = PendingIntent.getBroadcast(getApplicationContext(), 112, myIntent,PendingIntent.FLAG_CANCEL_CURRENT);
 		
 		alarams = (AlarmManager)getSystemService(ALARM_SERVICE);
 		alarams.setRepeating(AlarmManager.RTC_WAKEUP, c.getTimeInMillis(),

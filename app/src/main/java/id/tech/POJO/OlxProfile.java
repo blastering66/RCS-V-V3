@@ -3,8 +3,12 @@ package id.tech.POJO;
 /**
  * Created by RebelCreative-A1 on 16/03/2016.
  */
+
 import com.google.gson.annotations.Expose;
 import com.google.gson.annotations.SerializedName;
+
+import java.util.ArrayList;
+import java.util.List;
 
 public class OlxProfile {
     @SerializedName("json_code")
@@ -93,7 +97,7 @@ public class OlxProfile {
         private String totalVisitDaily;
         @SerializedName("images")
         @Expose
-        private String images;
+        private List<Image> images = new ArrayList<Image>();
 
         /**
          * @return The idTarget
@@ -277,18 +281,155 @@ public class OlxProfile {
             this.totalVisitDaily = totalVisitDaily;
         }
 
+
         /**
-         * @return The images
+         *
+         * @return
+         * The images
          */
-        public String getImages() {
+        public List<Image> getImages() {
             return images;
         }
 
         /**
-         * @param images The images
+         *
+         * @param images
+         * The images
          */
-        public void setImages(String images) {
+        public void setImages(List<Image> images) {
             this.images = images;
         }
     }
+
+    public class Image {
+
+        @SerializedName("id_image")
+        @Expose
+        private String idImage;
+        @SerializedName("nama_image")
+        @Expose
+        private String namaImage;
+        @SerializedName("deskripsi")
+        @Expose
+        private String deskripsi;
+        @SerializedName("tipe_image")
+        @Expose
+        private String tipeImage;
+        @SerializedName("id_tipe_image")
+        @Expose
+        private String idTipeImage;
+        @SerializedName("created_date")
+        @Expose
+        private String createdDate;
+
+        /**
+         *
+         * @return
+         * The idImage
+         */
+        public String getIdImage() {
+            return idImage;
+        }
+
+        /**
+         *
+         * @param idImage
+         * The id_image
+         */
+        public void setIdImage(String idImage) {
+            this.idImage = idImage;
+        }
+
+        /**
+         *
+         * @return
+         * The namaImage
+         */
+        public String getNamaImage() {
+            return namaImage;
+        }
+
+        /**
+         *
+         * @param namaImage
+         * The nama_image
+         */
+        public void setNamaImage(String namaImage) {
+            this.namaImage = namaImage;
+        }
+
+        /**
+         *
+         * @return
+         * The deskripsi
+         */
+        public String getDeskripsi() {
+            return deskripsi;
+        }
+
+        /**
+         *
+         * @param deskripsi
+         * The deskripsi
+         */
+        public void setDeskripsi(String deskripsi) {
+            this.deskripsi = deskripsi;
+        }
+
+        /**
+         *
+         * @return
+         * The tipeImage
+         */
+        public String getTipeImage() {
+            return tipeImage;
+        }
+
+        /**
+         *
+         * @param tipeImage
+         * The tipe_image
+         */
+        public void setTipeImage(String tipeImage) {
+            this.tipeImage = tipeImage;
+        }
+
+        /**
+         *
+         * @return
+         * The idTipeImage
+         */
+        public String getIdTipeImage() {
+            return idTipeImage;
+        }
+
+        /**
+         *
+         * @param idTipeImage
+         * The id_tipe_image
+         */
+        public void setIdTipeImage(String idTipeImage) {
+            this.idTipeImage = idTipeImage;
+        }
+
+        /**
+         *
+         * @return
+         * The createdDate
+         */
+        public String getCreatedDate() {
+            return createdDate;
+        }
+
+        /**
+         *
+         * @param createdDate
+         * The created_date
+         */
+        public void setCreatedDate(String createdDate) {
+            this.createdDate = createdDate;
+        }
+
+    }
+
 }

@@ -199,7 +199,7 @@ public class Olx_DialogNamaOutlet extends FragmentActivity {
 
                 @Override
                 public void onFailure(Throwable t) {
-                    Log.e("Error absen = ", t.getMessage().toString());
+//                    Log.e("Error absen = ", t.getMessage().toString());
                     Olx_DialogLocationConfirmation dialog = new Olx_DialogLocationConfirmation();
                     dialog.setContext(getApplicationContext());
                     dialog.setText("Gagal koneksi ke Server, Coba Lagi");

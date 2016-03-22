@@ -32,6 +32,7 @@ import android.widget.Toast;
 
 import com.google.gson.Gson;
 
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 import id.tech.util.Test_RestAdapter;
@@ -70,9 +71,8 @@ public class Olx_Login_Activity extends ActionBarActivity {
 					dialogProgress = new Olx_DialogFragmentProgress();
 					dialogProgress.show(getSupportFragmentManager(), "");
 
-					String cUsername = ed_Username.getText().toString();
-					String cPassword = ed_Password.getText().toString();
-					execute_Login(cUsername, cPassword);
+					new AsyncTask_Login().execute();
+
 				}
 				return false;
 			}
@@ -84,51 +84,21 @@ public class Olx_Login_Activity extends ActionBarActivity {
 			@Override
 			public void onClick(View v) {
 				// TODO Auto-generated method stub
-//				new Async_Login().execute();
-				dialogProgress = new Olx_DialogFragmentProgress();
-				dialogProgress.show(getSupportFragmentManager(), "");
 
 				String cUsername = ed_Username.getText().toString();
 				String cPassword = ed_Password.getText().toString();
-				execute_Login(cUsername, cPassword);
+
+				if(!cUsername.isEmpty() && !cPassword.isEmpty() && !cUsername.equals("") && !cPassword.equals("")){
+					new AsyncTask_Login().execute();
+				}else{
+					Toast.makeText(getApplicationContext(), "Harap isi Username & Password !", Toast.LENGTH_LONG).show();
+				}
 			}
 		});
 
 
 		execute_getJenisOutlet();
-
-//		Call<OlxOutlet> call = restAdapter.getOutlet();
-//		call.enqueue(new Callback<OlxOutlet>() {
-//			@Override
-//			public void onResponse(Response<OlxOutlet> response, Retrofit retrofit) {
-//
-//				if(response.isSuccess()) {
-////					Log.e("error =", response.message().toString());
-////					Log.e("error =", response.raw().toString());
-//					Log.e("data =", response.body().getData().toString());
-//					Log.e("Nama outlet =", response.body().getData().get(0).getNamaOutlet().toString());
-//					Toast.makeText(getApplicationContext(), retrofit.baseUrl().toString(), Toast.LENGTH_LONG).show();
-//
-//				}else{
-//					Toast.makeText(getApplicationContext(), "Response is Faliled ", Toast.LENGTH_LONG).show();
-////					Log.e("error =", response.errorBody().string().toString());
-//					Log.e("error =", String.valueOf(response.code()));
-//				}
-//
-//
-//			}
-//
-//			@Override
-//			public void onFailure(Throwable t) {
-//				Toast.makeText(getApplicationContext(), "OnFailure = " + t.getMessage().toString(), Toast.LENGTH_LONG).show();
-//			}
-//		});
-
-
-
-
-
-	}
+}
 
 	private void execute_getJenisOutlet(){
 		Test_RestAdapter restAdapter = retrofit.create(Test_RestAdapter.class);
@@ -162,15 +132,29 @@ public class Olx_Login_Activity extends ActionBarActivity {
 		});
 	}
 
-	private void execute_Login(final String username, String password){
-		Test_RestAdapter restAdapter = retrofit.create(Test_RestAdapter.class);
-		Call<OlxLogin> call_login = restAdapter.login(username, password);
-		call_login.enqueue(new Callback<OlxLogin>() {
-			@Override
-			public void onResponse(Response<OlxLogin> response, Retrofit retrofit) {
-				if(response.isSuccess()){
+	private class AsyncTask_Login extends AsyncTask<Void,Void,Void>{
+		Olx_DialogFragmentProgress dialogProgress;
+		String cUsername, cPassword, cCode,cMessage;
 
-					if(response.body().getJsonCode().equals("1")){
+		@Override
+		protected void onPreExecute() {
+			super.onPreExecute();
+			dialogProgress = new Olx_DialogFragmentProgress();
+			dialogProgress.show(getSupportFragmentManager(), "");
+
+			cUsername = ed_Username.getText().toString();
+			cPassword = ed_Password.getText().toString();
+		}
+
+		@Override
+		protected Void doInBackground(Void... params) {
+			Test_RestAdapter restAdapter = retrofit.create(Test_RestAdapter.class);
+			Call<OlxLogin> call_login = restAdapter.login(cUsername, cPassword);
+			try{
+				Response<OlxLogin> response = call_login.execute();
+				if (response.isSuccess()) {
+
+					if (response.body().getJsonCode().equals("1")) {
 						String cIdPegawai = response.body().getData().getIdPegawai().toString();
 						String cJabatan = response.body().getData().getJabatan().toString();
 
@@ -178,7 +162,7 @@ public class Olx_Login_Activity extends ActionBarActivity {
 								.commit();
 						sh.edit()
 								.putString(Parameter_Collections.SH_LOG_USERNAME,
-										username).commit();
+										cUsername).commit();
 						sh.edit()
 								.putString(Parameter_Collections.SH_ID_PEGAWAI,
 										cIdPegawai).commit();
@@ -195,26 +179,39 @@ public class Olx_Login_Activity extends ActionBarActivity {
 											cJabatan).commit();
 						}
 
-						Intent load = new Intent(getApplicationContext(),
-								Olx_MenuUtama_WP.class);
-						startActivity(load);
-						finish();
-					}else{
-						Toast.makeText(getApplicationContext(), "Username and Password Wrong ", Toast.LENGTH_LONG).show();
+						cCode = "1";
+					} else {
+						cCode = "0";
+						cMessage= "Username and Password Wrong ";
 					}
 
-					dialogProgress.dismiss();
-
-				}else{
-					Toast.makeText(getApplicationContext(), "Terjadi kesalahan dengan kode = " + response.code(), Toast.LENGTH_LONG).show();
+				} else {
+					cMessage= "Terjadi kesalahan dengan kode = " + response.code();
 				}
+			}catch (IOException e){
 
 			}
 
-			@Override
-			public void onFailure(Throwable t) {
-				Toast.makeText(getApplicationContext(), "Gagal mengkoneksi ke Server", Toast.LENGTH_LONG).show();
+			return null;
+		}
+
+		@Override
+		protected void onPostExecute(Void aVoid) {
+			super.onPostExecute(aVoid);
+			dialogProgress.dismiss();
+			if(cCode.equals("1")){
+				Intent load = new Intent(getApplicationContext(),
+						Olx_MenuUtama_WP.class);
+				startActivity(load);
+				finish();
+			}else{
+				Toast.makeText(getApplicationContext(), cMessage, Toast.LENGTH_LONG).show();
+
 			}
-		});
+		}
+
+
 	}
+
+
 }

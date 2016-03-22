@@ -36,7 +36,7 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Toast;
 
-public class Olx_SlidingTabsFragment extends Fragment {
+public class Olx_SlidingTabsFragment extends Fragment implements Olx_Activity_History_TabSlider.onRefresh {
     //	static ArrayList<RowData_History_Absensi> data_Absensi;
     static ArrayList<RowData_History> data_Branding;
     //	static ArrayList<RowData_History_Issue> data_Issue;
@@ -48,6 +48,11 @@ public class Olx_SlidingTabsFragment extends Fragment {
     private SlidingTabLayout mSlidingTableLayout;
     private ViewPager mViewPager;
     private List<SamplePagerItem> mTabs = new ArrayList<SamplePagerItem>();
+
+    @Override
+    public void loadData() {
+        new Async_GetAllHistory_Again().execute();
+    }
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
@@ -178,6 +183,8 @@ public class Olx_SlidingTabsFragment extends Fragment {
                     //gagal excute query
                     Log.e("Error = ", response.errorBody().toString());
                 }
+            }catch (RuntimeException e){
+
             }catch (IOException e){
 
             }
@@ -204,6 +211,8 @@ public class Olx_SlidingTabsFragment extends Fragment {
                 } else {
                     Log.e("Error = ", response.errorBody().toString());
                 }
+            }catch (RuntimeException e){
+
             }catch (IOException e){
 
             }
@@ -290,7 +299,7 @@ public class Olx_SlidingTabsFragment extends Fragment {
                         getChildFragmentManager()));
                 mSlidingTableLayout.setViewPager(mViewPager);
             }else{
-                Toast.makeText(getContext(), "No Data", Toast.LENGTH_LONG).show();
+                Toast.makeText(getContext(), "Gagal memuat Data, Coba Lagi", Toast.LENGTH_LONG).show();
             }
 
 
@@ -361,6 +370,110 @@ public class Olx_SlidingTabsFragment extends Fragment {
                 cMessage = e.getMessage().toString();
             }
         }
+    }
+
+    public class Async_GetAllHistory_Again extends AsyncTask<Void, Void, Void> {
+        String cCode, cMessage;
+        String total_data = "0";
+        Retrofit retrofit;
+        Test_RestAdapter restAdapter;
+        boolean dataVisit_isExisted, dataNotif_isExisted = false;
+
+        @Override
+        protected void onPreExecute() {
+            // TODO Auto-generated method stub
+            super.onPreExecute();
+            data_Branding = new ArrayList<RowData_History>();
+            data_Notif = new ArrayList<RowData_Notif>();
+        }
+
+        @Override
+        protected Void doInBackground(Void... params) {
+            // TODO Auto-generated method stub
+            retrofit = new Retrofit.Builder().baseUrl(Parameter_Collections.URL_ENDPOINT)
+                    .addConverterFactory(GsonConverterFactory.create()).build();
+            restAdapter = retrofit.create(Test_RestAdapter.class);
+            Call<OlxHistoryVisit> call_history = restAdapter.getHistoryPegawai(id_pegawai);
+            try{
+                Response<OlxHistoryVisit> response = call_history.execute();
+                if (response.isSuccess()) {
+                    Integer total_data = response.body().getTotalData();
+                    if (total_data > 0) {
+                        for (int i = 0; i < response.body().getData().size(); i++) {
+                            String nama_outlet = response.body().getData().get(i).getNamaOutlet();
+                            String username_visit = response.body().getData().get(i).getUsernameVisit();
+                            String email_visit = response.body().getData().get(i).getEmailVisit();
+                            String topup_visit = response.body().getData().get(i).getTopupVisit();
+
+                            String alamat_outlet = response.body().getData().get(i).getAlamatOutlet();
+                            String telepon_outlet = response.body().getData().get(i).getPhoneVisit();
+                            String confirm = response.body().getData().get(i).getConfirm();
+                            data_Branding.add(new RowData_History(nama_outlet, username_visit, email_visit, topup_visit,
+                                    alamat_outlet, telepon_outlet, confirm));
+                        }
+                        dataVisit_isExisted = true;
+                    } else {
+                        Log.e("Error = ", "Data 0");
+                    }
+                } else {
+                    //gagal excute query
+                    Log.e("Error = ", response.errorBody().toString());
+                }
+            }catch (IOException e){
+
+            }
+
+            Call<OlxHistoryNotif> call_notif = restAdapter.getHistoryNotif();
+            try{
+                Response<OlxHistoryNotif> response = call_notif.execute();
+                if (response.isSuccess()) {
+                    String cCode = response.body().getJsonCode();
+
+                    if (cCode.equals("1")) {
+                        for (int i = 0; i < response.body().getData().size(); i++) {
+                            String id = response.body().getData().get(i).getIdNotification();
+                            String judul = response.body().getData().get(i).getNotificationTitle();
+                            String pesan = response.body().getData().get(i).getNotificationMessage();
+
+                            data_Notif.add(new RowData_Notif(id, judul, pesan));
+                        }
+                        dataNotif_isExisted = true;
+
+                    } else {
+                        Log.e("Error = ", "Data 0");
+                    }
+                } else {
+                    Log.e("Error = ", response.errorBody().toString());
+                }
+            }catch (IOException e){
+
+            }
+
+
+            return null;
+        }
+
+        @Override
+        protected void onPostExecute(Void result) {
+            // TODO Auto-generated method stub
+            super.onPostExecute(result);
+
+            if(dataNotif_isExisted && dataVisit_isExisted){
+
+                mTabs.add(new SamplePagerItem("History Branding"));
+                mTabs.add(new SamplePagerItem("History Notifikasi"));
+
+                mViewPager.setAdapter(new SampleFragmentPagerAdapter(
+                        getChildFragmentManager()));
+                mSlidingTableLayout.setViewPager(mViewPager);
+            }else{
+                Toast.makeText(getContext(), "Gagal memuat Data, Coba Lagi", Toast.LENGTH_LONG).show();
+            }
+
+
+        }
+
+
     }
 
 }

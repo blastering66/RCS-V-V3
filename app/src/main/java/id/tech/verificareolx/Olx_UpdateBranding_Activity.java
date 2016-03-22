@@ -222,6 +222,7 @@ public class Olx_UpdateBranding_Activity extends ActionBarActivity{
 
 				}else{
 					//gagal
+					respondMessage = response.errorBody().toString();
 					return row_count ="0";
 				}
 			}catch (IOException e){
@@ -261,7 +262,7 @@ public class Olx_UpdateBranding_Activity extends ActionBarActivity{
 				
 				Olx_DialogLocationConfirmation dialog = new Olx_DialogLocationConfirmation();
 				dialog.setContext(getApplicationContext());
-				dialog.setText(result);
+				dialog.setText("Error = " + respondMessage +", Harap Coba lagi...");
 				dialog.setFrom(9);
 				dialog.setCancelable(false);
 				dialog.show(getSupportFragmentManager(), "");
