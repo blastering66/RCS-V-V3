@@ -113,4 +113,14 @@ public interface Test_RestAdapter {
             @Field("latitude_visit") String latitude_visit,
             @Field("longitude_visit") String longitude_visit
     );
+
+    @FormUrlEncoded
+    @POST("insert.php?")
+    Call<OlxResponseRowCount> registerGCM(
+            @Field("kind") String kind,
+            @Field("device_token") String device_token,
+            @Field("device_active") String device_active,
+            @Field("device_unique_id") String device_unique_id
+
+    );
 }

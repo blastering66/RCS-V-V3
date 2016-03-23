@@ -14,10 +14,16 @@ import com.google.android.gms.gcm.GoogleCloudMessaging;
 import com.google.android.gms.iid.InstanceID;
 
 import org.json.JSONObject;
-
+import id.tech.POJO.*;
+import id.tech.util.*;
 import java.io.IOException;
 
 import id.tech.util.Parameter_Collections;
+import retrofit.Call;
+import retrofit.Callback;
+import retrofit.GsonConverterFactory;
+import retrofit.Response;
+import retrofit.Retrofit;
 
 /**
  * Created by RebelCreative-A1 on 16/12/2015.
@@ -86,7 +92,7 @@ public class Verificare_RegistrationIntentService extends IntentService {
      *
      * @param token The new token.
      */
-    private void sendRegistrationToServer(String token) {
+    private void sendRegistrationToServer(final String token) {
         // Add custom implementation, as needed.
         TelephonyManager mngr = (TelephonyManager)getSystemService(Context.TELEPHONY_SERVICE);
         String imei = mngr.getDeviceId();
@@ -94,10 +100,43 @@ public class Verificare_RegistrationIntentService extends IntentService {
 //        Olx_ServiceHandlerJSON sh = new Olx_ServiceHandlerJSON();
 //        JSONObject jObj = sh.json_register_GCM_to_Server(token,imei);
 
-        sp.edit().putString(Parameter_Collections.SH_TOKEN_GCM, "dP3VpV9cEDc:APA91bEnlqfpZBstMk2H42uiLU0yvxR2nbvCAnA0FbNPJeOlXh9MkH9Obsh6G3HgiP42v_0ccBsEsZX0kwTBzBJ8q98jTi5NszdqdJGvI4Boq1tPtDrKe3EKvm4TrdC42BiwDtvrCGmV").commit();
-        sp.edit().putString(Parameter_Collections.SH_GCM_REGISTERED, "1").commit();
+        Retrofit retrofit= new Retrofit.Builder().baseUrl(Parameter_Collections.URL_ENDPOINT)
+                .addConverterFactory(GsonConverterFactory.create()).build();
 
-//        Log.e("RESULT GCM = ", jObj.toString());
+        Test_RestAdapter restAdapter = retrofit.create(Test_RestAdapter.class);
+            Call<OlxResponseRowCount> call = restAdapter.registerGCM(Parameter_Collections.KIND_DEVICE,
+                    token,"1", imei);
+            call.enqueue(new Callback<OlxResponseRowCount>() {
+                @Override
+                public void onResponse(Response<OlxResponseRowCount> response, Retrofit retrofit) {
+                    if (response.isSuccess()) {
+//                    sp.edit().putString(Parameter_Collections.SH_TOKEN_GCM, "dP3VpV9cEDc:APA91bEnlqfpZBstMk2H42uiLU0yvxR2nbvCAnA0FbNPJeOlXh9MkH9Obsh6G3HgiP42v_0ccBsEsZX0kwTBzBJ8q98jTi5NszdqdJGvI4Boq1tPtDrKe3EKvm4TrdC42BiwDtvrCGmV").commit();
+                        sp.edit().putString(Parameter_Collections.SH_TOKEN_GCM, token).commit();
+                        sp.edit().putString(Parameter_Collections.SH_GCM_REGISTERED, "1").commit();
+                        sp.edit().putBoolean(Parameter_Collections.SH_GCM_REGISTERED, true).commit();
+
+                        Log.e("RESULT GCM = ", "Registered = " + token);
+                    } else {
+                        sp.edit().putString(Parameter_Collections.SH_GCM_REGISTERED, "0").commit();
+                        sp.edit().putBoolean(Parameter_Collections.SH_GCM_REGISTERED, false).commit();
+                        Log.e("RESULT GCM = ", "Failed to Registered = " + token);
+                    }
+                }
+
+                @Override
+                public void onFailure(Throwable t) {
+                    sp.edit().putString(Parameter_Collections.SH_GCM_REGISTERED, "0").commit();
+                    sp.edit().putBoolean(Parameter_Collections.SH_GCM_REGISTERED, false).commit();
+                    Log.e("RESULT GCM = ", "Failed to Registered");
+                }
+            });
+
+
+
+
+
+
+
     }
 
     /**
